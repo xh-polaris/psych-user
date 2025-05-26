@@ -1,7 +1,8 @@
 package provider
 
 import (
-	"github.com/xh-polaris/psych-user/biz/infrastructure·/config"
+	"github.com/google/wire"
+	"github.com/xh-polaris/psych-user/biz/infrastructure/config"
 )
 
 var provider *Provider
@@ -16,17 +17,16 @@ func Init() {
 
 // Provider 提供controller依赖的对象
 type Provider struct {
-	Config          *config.Config
+	Config *config.Config
+}
 
 func Get() *Provider {
 	return provider
 }
 
-var RpcSet = wire.NewSet(
-)
+var RpcSet = wire.NewSet()
 
-var ApplicationSet = wire.NewSet(
-)
+var ApplicationSet = wire.NewSet()
 
 var InfrastructureSet = wire.NewSet(
 	config.NewConfig,

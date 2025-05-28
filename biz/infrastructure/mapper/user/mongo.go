@@ -47,7 +47,7 @@ func (m *MongoMapper) Insert(ctx context.Context, user *User) error {
 
 func (m *MongoMapper) Update(ctx context.Context, user *User) error {
 	user.UpdateTime = time.Now()
-	_, err := m.conn.UpdateByIDNoCache(ctx, user.ID, bson.M{"$set": user})
+	_, err := m.conn.UpdateByIDNoCache(ctx, user.Id, bson.M{"$set": user})
 	return err
 }
 

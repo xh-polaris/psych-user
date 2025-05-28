@@ -17,3 +17,10 @@ type User struct {
 	UpdateTime time.Time          `protobuf:"varint,9,opt,name=updateTime" json:"updateTime,omitempty"`
 	DeleteTime time.Time          `protobuf:"varint,10,opt,name=deleteTime" json:"deleteTime,omitempty"`
 }
+
+type UserStudentUnit struct {
+	Id        primitive.ObjectID `bson:"_id" json:"id,omitempty"`
+	UserId    primitive.ObjectID `bson:"user_id" json:"user_id,omitempty"`
+	StudentId primitive.ObjectID `bson:"student_id" json:"student_id,omitempty"`
+	UnitId    primitive.ObjectID `bson:"unit_id" json:"unit_id,omitempty"`
+}

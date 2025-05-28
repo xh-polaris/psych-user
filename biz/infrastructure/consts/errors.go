@@ -2,6 +2,7 @@ package consts
 
 import (
 	"errors"
+	"github.com/xh-polaris/psych-pkg/errorx"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -33,30 +34,27 @@ func NewErrno(code codes.Code, err error) *Errno {
 // 定义常量错误
 // TODO: 定义错误常量
 var (
-	ErrForbidden         = NewErrno(codes.PermissionDenied, errors.New("forbidden"))
-	ErrNotAuthentication = NewErrno(codes.Code(10000), errors.New("not authentication"))
-	ErrSignUp            = NewErrno(codes.Code(1001), errors.New("注册失败，请重试"))
-	ErrSignIn            = NewErrno(codes.Code(1002), errors.New("登录失败，请先注册或重试"))
-	ErrInSufficientCount = NewErrno(codes.Code(1003), errors.New("剩余调用次数不足，请充值或联系管理员添加"))
-	ErrRepeatedSignUp    = NewErrno(codes.Code(1004), errors.New("该手机号已注册"))
-	ErrOCR               = NewErrno(codes.Code(1005), errors.New("OCR识别失败，请重试"))
-	ErrNotSignUp         = NewErrno(codes.Code(1006), errors.New("请确认手机号已注册"))
-	ErrSend              = NewErrno(codes.Code(1007), errors.New("发送验证码失败，请重试"))
-	ErrVerifyCode        = NewErrno(codes.Code(1008), errors.New("验证码错误"))
-	ErrDailyAttend       = NewErrno(codes.Code(1009), errors.New("签到失败"))
-	ErrRepeatDailyAttend = NewErrno(codes.Code(1010), errors.New("一天只能签到一次"))
-	ErrRepeatInvitation  = NewErrno(codes.Code(1011), errors.New("已填写过邀请码"))
-	ErrInvitation        = NewErrno(codes.Code(1011), errors.New("填写邀请码失败，请重试"))
+	// User模块相关错误码
+	// User模块相关错误码
+	ErrUserSignUp             = errorx.New(10001, "用户注册失败，请重试")
+	ErrUserPhoneExist         = errorx.New((10002), "该手机号已被注册")
+	ErrUserVerify             = errorx.New((10003), "验证码错误")
+	ErrUserPasswordMismatch   = errorx.New((10004), "密码不匹配")
+	ErrUserNotExist           = errorx.New((10005), "用户账号不存在")
+	ErrUserGetInfo            = errorx.New((10006), "获取用户信息失败")
+	ErrUserSignIn             = errorx.New((10007), "用户登录失败")
+	ErrUserStudentIdNotExist  = errorx.New((10008), "学号不存在")
+	ErrUserStudentIdDuplicate = errorx.New((10009), "学号对应多个用户")
 
 	// Unit模块相关错误码
-	ErrUnitSignUp           = NewErrno(codes.Code(12001), errors.New("单位注册失败，请重试"))
-	ErrUnitPhoneExist       = NewErrno(codes.Code(12002), errors.New("该手机号已被注册为单位账号"))
-	ErrUnitVerify           = NewErrno(codes.Code(12003), errors.New("单位账号验证失败"))
-	ErrUnitPasswordMismatch = NewErrno(codes.Code(12004), errors.New("密码不匹配"))
-	ErrUnitNotExist         = NewErrno(codes.Code(12005), errors.New("单位账号不存在"))
-	ErrUnitLinkUser         = NewErrno(codes.Code(12006), errors.New("关联用户失败"))
-	ErrUnitGetInfo          = NewErrno(codes.Code(12007), errors.New("获取单位信息失败"))
-	ErrUnitCreateUser       = NewErrno(codes.Code(12008), errors.New("创建用户失败"))
+	ErrUnitSignUp           = errorx.New(12001, "单位注册失败，请重试")
+	ErrUnitPhoneExist       = errorx.New(12002, "该手机号已被注册为单位账号")
+	ErrUnitVerify           = errorx.New(12003, "单位账号验证失败")
+	ErrUnitPasswordMismatch = errorx.New(12004, "密码不匹配")
+	ErrUnitNotExist         = errorx.New(12005, "单位账号不存在")
+	ErrUnitLinkUser         = errorx.New(12006, "关联用户失败")
+	ErrUnitGetInfo          = errorx.New(12007, "获取单位信息失败")
+	ErrUnitCreateUser       = errorx.New(12008, "创建用户失败")
 )
 
 // ErrInvalidParams 调用时错误

@@ -3,6 +3,7 @@ package consts
 // 数据库相关
 const (
 	ID         = "_id"
+	SID        = "student_id"
 	UserID     = "user_id"
 	ViewId     = "view_id"
 	UnitId     = "unit_id"

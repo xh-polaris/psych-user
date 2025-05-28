@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	prefixUserCacheKey = "cache:user"
-	CollectionName     = "user"
+	prefixUserCacheKey        = "cache:user"
+	CollectionName            = "user"
+	SidUnitLinkCollectionName = "user_student_unit_link"
 )
 
 type IMongoMapper interface {
@@ -27,13 +28,16 @@ type IMongoMapper interface {
 }
 
 type MongoMapper struct {
-	conn *monc.Model
+	conn     *monc.Model
+	linkConn *monc.Model
 }
 
 func NewMongoMapper(config *config.Config) *MongoMapper {
 	conn := monc.MustNewModel(config.Mongo.URL, config.Mongo.DB, CollectionName, config.Cache)
+	linkConn := monc.MustNewModel(config.Mongo.URL, config.Mongo.DB, SidUnitLinkCollectionName, config.Cache)
 	return &MongoMapper{
-		conn: conn,
+		conn:     conn,
+		linkConn: linkConn,
 	}
 }
 
@@ -117,4 +121,19 @@ func (m *MongoMapper) UpdateCount(ctx context.Context, id string, increment int6
 		},
 	})
 	return err
+}
+
+func (m *MongoMapper) FindUSULinkBySid(ctx context.Context, sid string) (*UserStudentUnit, error) {
+	oid, err := primitive.ObjectIDFromHex(sid)
+	if err != nil {
+		return nil, consts.ErrInvalidObjectId
+	}
+	var u UserStudentUnit
+	err = m.conn.FindOneNoCache(ctx, &u, bson.M{
+		consts.SID: oid,
+	})
+	if err != nil {
+		return nil, consts.ErrNotFound
+	}
+	return &u, nil
 }

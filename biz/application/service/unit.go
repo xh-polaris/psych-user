@@ -3,8 +3,7 @@ package service
 import (
 	"context"
 	"errors"
-
-	"github.com/google/wire"
+	"github.com/xh-polaris/psych-pkg/wirex"
 
 	"github.com/xh-polaris/psych-idl/kitex_gen/basic"
 	u "github.com/xh-polaris/psych-idl/kitex_gen/user"
@@ -39,7 +38,7 @@ type UnitService struct {
 	UserMapper *usrMapper.MongoMapper
 }
 
-var PsychUnitSet = wire.NewSet()
+var UnitServiceSet = wirex.NewWireSet[UnitService, IUnitService]()
 
 // UnitSignUp 单位账号注册
 func (s *UnitService) UnitSignUp(ctx context.Context, req *u.UnitSignUpReq) (res *basic.Response, err error) {

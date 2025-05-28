@@ -2,6 +2,7 @@ package consts
 
 import (
 	"errors"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -46,6 +47,16 @@ var (
 	ErrRepeatDailyAttend = NewErrno(codes.Code(1010), errors.New("一天只能签到一次"))
 	ErrRepeatInvitation  = NewErrno(codes.Code(1011), errors.New("已填写过邀请码"))
 	ErrInvitation        = NewErrno(codes.Code(1011), errors.New("填写邀请码失败，请重试"))
+
+	// Unit模块相关错误码
+	ErrUnitSignUp           = NewErrno(codes.Code(12001), errors.New("单位注册失败，请重试"))
+	ErrUnitPhoneExist       = NewErrno(codes.Code(12002), errors.New("该手机号已被注册为单位账号"))
+	ErrUnitVerify           = NewErrno(codes.Code(12003), errors.New("单位账号验证失败"))
+	ErrUnitPasswordMismatch = NewErrno(codes.Code(12004), errors.New("密码不匹配"))
+	ErrUnitNotExist         = NewErrno(codes.Code(12005), errors.New("单位账号不存在"))
+	ErrUnitLinkUser         = NewErrno(codes.Code(12006), errors.New("关联用户失败"))
+	ErrUnitGetInfo          = NewErrno(codes.Code(12007), errors.New("获取单位信息失败"))
+	ErrUnitCreateUser       = NewErrno(codes.Code(12008), errors.New("创建用户失败"))
 )
 
 // ErrInvalidParams 调用时错误

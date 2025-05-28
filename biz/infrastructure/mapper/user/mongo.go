@@ -3,12 +3,13 @@ package user
 import (
 	"context"
 	"errors"
+	"time"
+
 	"github.com/xh-polaris/psych-user/biz/infrastructure/config"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/consts"
 	"github.com/zeromicro/go-zero/core/stores/monc"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"time"
 )
 
 const (
@@ -18,6 +19,7 @@ const (
 
 type IMongoMapper interface {
 	Insert(ctx context.Context, user *User) error
+	InsertMany(ctx context.Context, users []*User) error
 	Update(ctx context.Context, user *User) error
 	FindOne(ctx context.Context, id string) (*User, error)
 	FindOneByPhone(ctx context.Context, id string) (*User, error)
@@ -43,6 +45,29 @@ func (m *MongoMapper) Insert(ctx context.Context, user *User) error {
 	}
 	_, err := m.conn.InsertOneNoCache(ctx, user)
 	return err
+}
+
+func (m *MongoMapper) InsertMany(ctx context.Context, users []*User) error {
+	if len(users) == 0 {
+		return nil
+	}
+
+	currentTime := time.Now()
+	for _, user := range users {
+		if user.Id.IsZero() {
+			user.Id = primitive.NewObjectID()
+			user.CreateTime = currentTime
+			user.UpdateTime = currentTime
+		}
+
+		// 逐个插入文档
+		_, err := m.conn.InsertOneNoCache(ctx, user)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (m *MongoMapper) Update(ctx context.Context, user *User) error {

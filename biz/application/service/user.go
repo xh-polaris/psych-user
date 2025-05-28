@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
+	"github.com/google/wire"
 	"github.com/xh-polaris/psych-idl/kitex_gen/basic"
 	u "github.com/xh-polaris/psych-idl/kitex_gen/user"
-	"github.com/xh-polaris/psych-pkg/wirex"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/consts"
 	nmapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/unit"
 	umapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/user"
@@ -26,7 +26,10 @@ type UserService struct {
 	UnitMapper *nmapper.MongoMapper
 }
 
-var UserServiceSet = wirex.NewWireSet[UserService, IUserService]()
+var UserServiceSet = wire.NewSet(
+	wire.Struct(new(UserService), "*"),
+	wire.Bind(new(IUserService), new(*UserService)),
+)
 
 func (s *UserService) UserSignUp(ctx context.Context, req *u.UserSignUpReq) (res *basic.Response, err error) {
 	// 1. 判断根据手机号还是学号注册

@@ -2,9 +2,9 @@ package controller
 
 import (
 	"context"
+	"github.com/google/wire"
 	"github.com/xh-polaris/psych-idl/kitex_gen/basic"
 	u "github.com/xh-polaris/psych-idl/kitex_gen/user"
-	"github.com/xh-polaris/psych-pkg/wirex"
 	"github.com/xh-polaris/psych-user/biz/application/service"
 )
 
@@ -21,7 +21,10 @@ type UserController struct {
 	UserService *service.UserService
 }
 
-var UserControllerSet = wirex.NewWireSet[UserController, IUserController]()
+var UserControllerSet = wire.NewSet(
+	wire.Struct(new(UserController), "*"),
+	wire.Bind(new(IUserController), new(*UserController)),
+)
 
 func (u UserController) UserGetInfo(ctx context.Context, req *u.UserGetInfoReq) (res *u.UserGetInfoResp, err error) {
 

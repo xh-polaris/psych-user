@@ -21,8 +21,8 @@ type Config struct {
 	service.ServiceConf
 	ListenOn string
 	State    string
-	Auth     Auth
-	Mongo    struct {
+	// Auth     Auth
+	Mongo struct {
 		URL string
 		DB  string
 	}

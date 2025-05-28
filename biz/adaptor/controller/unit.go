@@ -2,9 +2,9 @@ package controller
 
 import (
 	"context"
+	"github.com/google/wire"
 	"github.com/xh-polaris/psych-idl/kitex_gen/basic"
 	u "github.com/xh-polaris/psych-idl/kitex_gen/user"
-	"github.com/xh-polaris/psych-pkg/wirex"
 	"github.com/xh-polaris/psych-user/biz/application/service"
 )
 
@@ -32,6 +32,92 @@ type UnitController struct {
 	UnitService *service.UnitService
 }
 
-var (
-	UnitControllerSet = wirex.NewWireSet[UnitController, IUnitController]()
+func (u UnitController) UnitSignUp(ctx context.Context, req *u.UnitSignUpReq) (res *basic.Response, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u UnitController) UnitGetInfo(ctx context.Context, req *u.UnitGetInfoReq) (res *u.UnitGetInfoResp, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u UnitController) UnitUpdateInfo(ctx context.Context, req *u.UnitUpdateInfoReq) (res *basic.Response, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u UnitController) UnitUpdatePassword(ctx context.Context, req *u.UnitUpdatePasswordReq) (res *basic.Response, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u UnitController) UnitStrongVerify(ctx context.Context, req *u.UnitStrongVerifyReq) (res *basic.Response, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u UnitController) UnitWeakVerify(ctx context.Context, req *u.UnitWeakVerifyReq) (res *basic.Response, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u UnitController) UnitCreateVerify(ctx context.Context, req *u.UnitCreateVerifyReq) (res *u.UnitCreateVerifyResp, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u UnitController) UnitUpdateVerifyPassword(ctx context.Context, req *u.UnitUpdateVerifyPasswordReq) (res *basic.Response, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u UnitController) UnitLinkUser(ctx context.Context, req *u.UnitLinkUserReq) (res *basic.Response, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u UnitController) UnitLinkView(ctx context.Context, req *u.UnitLinkViewReq) (res *basic.Response, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u UnitController) UnitPageQueryUser(ctx context.Context, req *u.UnitPageQueryUserReq) (res *u.UnitPageQueryUserResp, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u UnitController) UnitPageQueryView(ctx context.Context, req *u.UnitPageQueryViewReq) (res *u.UnitPageQueryViewResp, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u UnitController) UnitCreateAndLinkUser(ctx context.Context, req *u.UnitCreateAndLinkUserReq) (res *basic.Response, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u UnitController) UnitCreateAndLinkView(ctx context.Context, req *u.UnitCreateAndLinkViewReq) (res *basic.Response, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u UnitController) UnitGetAppInfo(ctx context.Context, req *u.UnitGetAppInfoReq) (res *u.UnitGetAppInfoResp, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u UnitController) UnitModelGetInfo(ctx context.Context, req *u.UnitModelGetInfoReq) (res *u.UnitModelGetInfoResp, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (u UnitController) UnitModelUpdateInfo(ctx context.Context, req *u.UnitModelUpdateInfoReq) (res *basic.Response, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+var UnitControllerSet = wire.NewSet(
+	wire.Struct(new(UnitController), "*"),
+	wire.Bind(new(IUnitController), new(*UnitController)),
 )

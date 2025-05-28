@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
+	"github.com/google/wire"
 	"github.com/xh-polaris/psych-idl/kitex_gen/basic"
 	v "github.com/xh-polaris/psych-idl/kitex_gen/user"
-	"github.com/xh-polaris/psych-pkg/wirex"
 )
 
 type IViewService interface {
@@ -17,7 +17,10 @@ type IViewService interface {
 }
 type ViewService struct{}
 
-var ViewServiceSet = wirex.NewWireSet[ViewService, IViewService]()
+var ViewServiceSet = wire.NewSet(
+	wire.Struct(new(ViewService), "*"),
+	wire.Bind(new(IViewService), new(*ViewService)),
+)
 
 func (v ViewService) ViewSignUp(ctx context.Context, req *v.ViewSignUpReq) (res *basic.Response, err error) {
 	//TODO implement me

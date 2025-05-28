@@ -401,6 +401,8 @@ github.com/xh-polaris/meowchat-core-api v1.0.78 h1:OFgEWLo/pvUt7uV7ROdhGQo+9r730
 github.com/xh-polaris/meowchat-core-api v1.0.78/go.mod h1:V/S0ctnMK/rCvKCujXrHWXyYOS3roD6GtakdmYE+Frs=
 github.com/xh-polaris/openapi-core-api v0.0.0-20250313113002-e6d6b2770678 h1:RK0gh0psplL85u3aKSzBPNDZM1e4rMD0t7JLicl77yQ=
 github.com/xh-polaris/openapi-core-api v0.0.0-20250313113002-e6d6b2770678/go.mod h1:bO+5mFYNPjxLsk0xAgARdN/m9oqoa8DZWhYEh5JzWa4=
+github.com/xh-polaris/psych-idl v0.0.0-20250526113352-478d8b3a96e9 h1:uZSAibuhOrTDIDny8MaHOEOeUd7XePpOhZz+T1y7VI8=
+github.com/xh-polaris/psych-idl v0.0.0-20250526113352-478d8b3a96e9/go.mod h1:Mq9OKYzoq5fzibYWoxdO0xsybjShIVJ4XLKu/IpVWHw=
 github.com/xh-polaris/service-idl-gen-go v0.0.0-20241217080745-957498d2acb2 h1:VTVNFpLhI5lFG9JsBQCXhumvx9tQ1rkfuLfKRFGe698=
 github.com/xh-polaris/service-idl-gen-go v0.0.0-20241217080745-957498d2acb2/go.mod h1:3ixuadpEpTumm8RftVwtXYH8Zfmu6shi33Hh5GKC6cU=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

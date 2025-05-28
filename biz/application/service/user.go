@@ -2,8 +2,9 @@ package service
 
 import (
 	"context"
-	"github.com/xh-polaris/psych-idl-gen/kitex_gen/user"
-	"github.com/xh-polaris/psych-idl-gen/kitex_gen/user/user"
+	"github.com/xh-polaris/psych-idl/kitex_gen/basic"
+	"github.com/xh-polaris/psych-idl/kitex_gen/user"
+	"github.com/xh-polaris/psych-idl/kitex_gen/user/user"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/mapper/user"
 )
 

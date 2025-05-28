@@ -80,6 +80,8 @@ require (
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/xh-polaris/meowchat-core-api v1.0.78 // indirect
+	github.com/xh-polaris/psych-idl v0.0.0-20250526114955-be2faaa6b299 // indirect
+	github.com/xh-polaris/psych-pkg v0.0.0-20250521140101-2e8463201b49 // indirect
 	github.com/xh-polaris/service-idl-gen-go v0.0.0-20241217080745-957498d2acb2 // indirect
 	go.mongodb.org/mongo-driver v1.17.3 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect

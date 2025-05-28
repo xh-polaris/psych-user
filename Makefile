@@ -1,13 +1,13 @@
 .PHONY: start build wire update new clean
 
-SERVICE_NAME := psych-user
+SERVICE_NAME := psych.user
 MODULE_NAME := github.com/xh-polaris/psych-user
 
 HANDLER_DIR := biz/adaptor/controller
 MODEL_DIR := biz/application/dto
 ROUTER_DIR := biz/adaptor/router
 
-IDL_DIR ?= ../service-idl
+IDL_DIR ?= ../psych-idl
 MAIN_IDL_PATH := $(subst -,_,$(shell echo $(SERVICE_NAME) | awk -F '.' ' {for(i=1;i<=NF;i++) printf "%s/", $$i; printf "%s", $$NF }'))
 FULL_MAIN_IDL_PATH := $(IDL_DIR)/$(MAIN_IDL_PATH).proto
 

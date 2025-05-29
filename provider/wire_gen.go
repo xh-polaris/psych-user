@@ -12,6 +12,7 @@ import (
 	"github.com/xh-polaris/psych-user/biz/application/service"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/config"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/mapper/unit"
+	"github.com/xh-polaris/psych-user/biz/infrastructure/mapper/unit_user"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/mapper/user"
 )
 
@@ -24,9 +25,11 @@ func NewProvider() (*adaptor.Server, error) {
 	}
 	mongoMapper := user.NewMongoMapper(configConfig)
 	unitMongoMapper := unit.NewMongoMapper(configConfig)
+	unit_userMongoMapper := unit_user.NewMongoMapper(configConfig)
 	userService := &service.UserService{
 		UserMapper: mongoMapper,
 		UnitMapper: unitMongoMapper,
+		UUMapper:   unit_userMongoMapper,
 	}
 	userController := &controller.UserController{
 		UserService: userService,
@@ -34,6 +37,7 @@ func NewProvider() (*adaptor.Server, error) {
 	unitService := &service.UnitService{
 		UnitMapper: unitMongoMapper,
 		UserMapper: mongoMapper,
+		UUMapper:   unit_userMongoMapper,
 	}
 	unitController := &controller.UnitController{
 		UnitService: unitService,

@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	prefixUnitCacheKey     = "cache:unit"
-	CollectionName         = "unit"
-	UnitUserLinkCollection = "unit_user_links"
+	prefixUnitCacheKey = "cache:unit"
+	CollectionName     = "unit"
+	UnitUserCollection = "unit_user"
 )
 
 type IMongoMapper interface {
@@ -33,7 +33,7 @@ type MongoMapper struct {
 
 func NewMongoMapper(config *config.Config) *MongoMapper {
 	conn := monc.MustNewModel(config.Mongo.URL, config.Mongo.DB, CollectionName, config.Cache)
-	linkConn := monc.MustNewModel(config.Mongo.URL, config.Mongo.DB, UnitUserLinkCollection, config.Cache)
+	linkConn := monc.MustNewModel(config.Mongo.URL, config.Mongo.DB, UnitUserCollection, config.Cache)
 	return &MongoMapper{
 		conn:     conn,
 		linkConn: linkConn,
@@ -42,10 +42,7 @@ func NewMongoMapper(config *config.Config) *MongoMapper {
 
 // Insert 插入新的单位记录
 func (m *MongoMapper) Insert(ctx context.Context, unit *Unit) error {
-	if unit.Id.IsZero() {
-		unit.Id = primitive.NewObjectID()
-	}
-
+	unit.Id = primitive.NewObjectID().Hex()
 	// 设置创建和更新时间
 	now := time.Now()
 	unit.CreateTime = now
@@ -73,14 +70,9 @@ func (m *MongoMapper) FindOneByPhone(ctx context.Context, phone string) (*Unit, 
 
 // FindOne 根据ID查找单位
 func (m *MongoMapper) FindOne(ctx context.Context, id string) (*Unit, error) {
-	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, consts.ErrInvalidObjectId
-	}
-
 	var u Unit
-	err = m.conn.FindOneNoCache(ctx, &u, bson.M{
-		consts.ID: oid,
+	err := m.conn.FindOneNoCache(ctx, &u, bson.M{
+		consts.ID: id,
 	})
 
 	if err != nil {

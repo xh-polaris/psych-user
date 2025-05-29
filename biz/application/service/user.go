@@ -5,10 +5,13 @@ import (
 	"github.com/google/wire"
 	"github.com/xh-polaris/psych-idl/kitex_gen/basic"
 	u "github.com/xh-polaris/psych-idl/kitex_gen/user"
+	"github.com/xh-polaris/psych-pkg/util/logx"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/consts"
-	nmapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/unit"
-	umapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/user"
+	untmapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/unit"
+	uumapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/unit_user"
+	usrmapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/user"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/encrypt"
+	"github.com/xh-polaris/psych-user/biz/infrastructure/util/result"
 )
 
 type IUserService interface {
@@ -22,8 +25,9 @@ type IUserService interface {
 }
 
 type UserService struct {
-	UserMapper *umapper.MongoMapper
-	UnitMapper *nmapper.MongoMapper
+	UserMapper *usrmapper.MongoMapper
+	UnitMapper *untmapper.MongoMapper
+	UUMapper   *uumapper.MongoMapper
 }
 
 var UserServiceSet = wire.NewSet(
@@ -37,84 +41,73 @@ func (s *UserService) UserSignUp(ctx context.Context, req *u.UserSignUpReq) (res
 }
 
 func (s *UserService) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res *basic.Response, err error) {
-	// 1. 判断使用学号还是手机号登录。学号->密码；手机号->密码或验证码
-	if req.GetPhone() != "" {
-		// 手机号校验
-		// 2. 判断手机号是否存在
-		user, err := s.UserMapper.FindOneByPhone(ctx, *req.Phone)
-		if err != nil {
-			return nil, consts.ErrUserNotExist
-		}
-
-		// 3. 如果验证码不为空，则走验证码校验流程
-		if req.GetVerifyCode() != "" {
-			// TODO: 验证码
-			if *req.VerifyCode == "xh-polaris" {
-				return &basic.Response{
-					Code: 200,
-					Msg:  "",
-				}, nil
-			} else {
-				return res, consts.ErrUserVerify
+	// 根据 authType 选择登录方式
+	authType := req.AuthType
+	switch authType {
+	case consts.AuthPhone:
+		{
+			// 通过手机号登录
+			// 获取手机号
+			phone := req.GetAuthId()
+			password := req.GetPassword()
+			verifyCode := req.GetVerifyCode()
+			if phone == "" {
+				return nil, consts.ErrUserNotExist
 			}
-		}
 
-		// 4. 如果验证码为空，走密码验证
-		if req.Password == nil || *req.Password == "" {
-			return nil, consts.ErrUserPasswordMismatch
-		}
-
-		// 5. 校验密码
-		if user.Password != *req.Password {
-			return nil, consts.ErrUserPasswordMismatch
-		}
-
-	} else if len(req.StudentId) > 0 {
-		// 学号校验
-		// 2. 遍历学号，检查是否对应唯一user
-		userIdSet := make(map[string]struct{})
-		for _, sid := range req.StudentId {
-			record, err := s.UserMapper.FindUSULinkBySid(ctx, sid)
-			if err != nil || record == nil {
-				return nil, consts.ErrUserStudentIdNotExist
+			// 判断通过密码还是验证码登录
+			if verifyCode != "" {
+				// TODO: 验证码逻辑
+				if *req.VerifyCode == "xh-polaris" {
+					return result.ResponseOk(), nil
+				} else {
+					return nil, consts.ErrUserVerify
+				}
 			}
-			userIdSet[record.UserId.Hex()] = struct{}{}
-		}
 
-		if len(userIdSet) != 1 {
-			return nil, consts.ErrUserStudentIdDuplicate
+			// 查询用户密码
+			user, err := s.UserMapper.FindOneByPhone(ctx, phone)
+			if err != nil {
+				return nil, consts.ErrUserNotExist
+			}
+			// 校验密码
+			if !encrypt.BcryptCheck(password, user.Password) {
+				return nil, consts.ErrUserPasswordMismatch
+			}
+			return result.ResponseOk(), nil
 		}
-
-		// 2. 查询用户信息
-		var userId string
-		for uid := range userIdSet {
-			userId = uid
+	case consts.AuthStudentId:
+		{
+			// 通过学号登录
+			studentId := req.GetAuthId()
+			password := req.GetPassword()
+			// 通过studentId + unitId查询
+			user, err := s.UUMapper.FindOneByUnitAndStu(ctx, req.UnitId, studentId)
+			if err != nil {
+				return nil, consts.ErrUserNotExist
+			}
+			usr, err := s.UserMapper.FindOne(ctx, user.UserId)
+			if err != nil {
+				return nil, consts.ErrUserNotExist
+			}
+			if !encrypt.BcryptCheck(password, usr.Password) {
+				return nil, consts.ErrUserPasswordMismatch
+			}
+			return result.ResponseOk(), nil
 		}
-		user, err := s.UserMapper.FindOne(ctx, userId)
-		if err != nil || user == nil {
-			return nil, consts.ErrUserNotExist
-		}
-
-		if req.Password == nil || !encrypt.BcryptCheck(req.GetPassword(), user.Password) {
-			return nil, consts.ErrUserPasswordMismatch
-		}
-
-		return &basic.Response{
-			Code: 200,
-			Msg:  "",
-		}, nil
 	}
 	return nil, consts.ErrUserSignIn
 }
 func (s *UserService) UserGetInfo(ctx context.Context, req *u.UserGetInfoReq) (res *u.UserGetInfoResp, err error) {
-	id := req.Id
-	user, err := s.UserMapper.FindOne(ctx, id)
+	userId := req.GetUserId()
+	logx.Info("正在查找用户信息: userId = %d\n", userId)
+	user, err := s.UserMapper.FindOne(ctx, userId)
 	if err != nil {
-		return nil, consts.ErrNotFound
+		return nil, consts.ErrUserNotExist
 	}
 
-	return &u.UserGetInfoResp{User: &u.User{
-		Id:         user.Id.Hex(),
+	res = &u.UserGetInfoResp{User: &u.User{
+		Id:         user.Id,
 		Phone:      user.Phone,
 		Password:   "",
 		Name:       user.Name,
@@ -123,7 +116,20 @@ func (s *UserService) UserGetInfo(ctx context.Context, req *u.UserGetInfoReq) (r
 		Status:     user.Status,
 		CreateTime: user.CreateTime.Unix(),
 		UpdateTime: user.DeleteTime.Unix(),
-	}}, err
+	}}
+	unitId := req.GetUnitId()
+	if unitId != "" {
+		logx.Info("正在查找用户关联信息: userId = %s, unitId = %s\n", userId, unitId)
+		uu, err := s.UUMapper.FindOneByUU(ctx, userId, unitId)
+		if err != nil {
+			return nil, err
+		}
+		arr := []*u.Option{uu.Options}
+		arr = append(arr, uu.Options)
+		res.Options = arr
+		// res.Options = uu.Options
+	}
+	return res, nil
 }
 func (s *UserService) UserUpdateInfo(ctx context.Context, req *u.UserUpdateInfoReq) (res *basic.Response, err error) {
 	return nil, err

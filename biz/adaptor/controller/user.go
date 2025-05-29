@@ -5,6 +5,7 @@ import (
 	"github.com/google/wire"
 	"github.com/xh-polaris/psych-idl/kitex_gen/basic"
 	u "github.com/xh-polaris/psych-idl/kitex_gen/user"
+	"github.com/xh-polaris/psych-pkg/util/logx"
 	"github.com/xh-polaris/psych-user/biz/application/service"
 )
 
@@ -27,9 +28,8 @@ var UserControllerSet = wire.NewSet(
 )
 
 func (u UserController) UserGetInfo(ctx context.Context, req *u.UserGetInfoReq) (res *u.UserGetInfoResp, err error) {
-
+	logx.Info("UserGetInfo", req)
 	return u.UserService.UserGetInfo(ctx, req)
-
 }
 
 func (u UserController) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res *basic.Response, err error) {

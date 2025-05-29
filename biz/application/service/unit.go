@@ -6,10 +6,13 @@ import (
 	"github.com/google/wire"
 	"github.com/xh-polaris/psych-idl/kitex_gen/basic"
 	u "github.com/xh-polaris/psych-idl/kitex_gen/user"
+	"github.com/xh-polaris/psych-pkg/util/logx"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/consts"
-	umapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/unit"
+	untmapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/unit"
+	uuMapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/unit_user"
 	usrMapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/user"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/encrypt"
+	"github.com/xh-polaris/psych-user/biz/infrastructure/util/result"
 )
 
 type IUnitService interface {
@@ -33,8 +36,9 @@ type IUnitService interface {
 }
 
 type UnitService struct {
-	UnitMapper *umapper.MongoMapper
+	UnitMapper *untmapper.MongoMapper
 	UserMapper *usrMapper.MongoMapper
+	UUMapper   *uuMapper.MongoMapper
 }
 
 var UnitServiceSet = wire.NewSet(
@@ -48,7 +52,8 @@ func (s *UnitService) UnitSignUp(ctx context.Context, req *u.UnitSignUpReq) (res
 
 	// 参数校验
 	if req.Unit == nil || req.Unit.Phone == "" || req.Unit.Password == "" || req.Unit.Name == "" {
-		return nil, consts.ErrInvalidParams
+		logx.Error("UnitSignUp fail")
+		return nil, consts.ErrUnitSignUp
 	}
 
 	// 检查手机号是否已注册
@@ -66,7 +71,7 @@ func (s *UnitService) UnitSignUp(ctx context.Context, req *u.UnitSignUpReq) (res
 	}
 
 	// 创建单位对象
-	unit := &umapper.Unit{
+	unit := &untmapper.Unit{
 		Phone:    req.Unit.Phone,
 		Password: hashedPwd,
 		Name:     req.Unit.Name,
@@ -83,9 +88,7 @@ func (s *UnitService) UnitSignUp(ctx context.Context, req *u.UnitSignUpReq) (res
 	}
 
 	// 返回成功响应
-	res.Code = 0
-	res.Msg = "success"
-	return res, nil
+	return result.ResponseOk(), nil
 }
 
 // UnitStrongVerify 单位账号认证
@@ -93,12 +96,12 @@ func (s *UnitService) UnitStrongVerify(ctx context.Context, req *u.UnitStrongVer
 	res = &basic.Response{}
 
 	// 参数校验
-	if req.Phone == "" || req.Password == nil || *req.Password == "" {
+	if req.Phone == "" || req.GetPhone() == "" {
 		return nil, consts.ErrInvalidParams
 	}
 
 	// TODO: 验证码功能
-	if req.VerifyCode != nil && *req.VerifyCode != "" {
+	if req.GetVerifyCode() != "" {
 		// 验证码校验逻辑
 	}
 
@@ -117,7 +120,7 @@ func (s *UnitService) UnitStrongVerify(ctx context.Context, req *u.UnitStrongVer
 	}
 
 	// 返回成功响应
-	res.Code = 0
+	res.Code = 200
 	res.Msg = "success"
 	return res, nil
 }
@@ -141,7 +144,7 @@ func (s *UnitService) UnitGetInfo(ctx context.Context, req *u.UnitGetInfoReq) (r
 	// 构建响应
 	res = &u.UnitGetInfoResp{
 		Unit: &u.Unit{
-			Id:         unit.Id.Hex(),
+			Id:         unit.Id,
 			Phone:      unit.Phone,
 			Password:   "", // 密码字段为空
 			Name:       unit.Name,
@@ -196,83 +199,132 @@ func (s *UnitService) UnitLinkUser(ctx context.Context, req *u.UnitLinkUserReq) 
 	}
 
 	// 返回成功响应
-	res.Code = 0
-	res.Msg = "success"
-	return res, nil
+	return result.ResponseOk(), nil
 }
 
 // UnitCreateAndLinkUser 批量创建并关联用户
 func (s *UnitService) UnitCreateAndLinkUser(ctx context.Context, req *u.UnitCreateAndLinkUserReq) (res *basic.Response, err error) {
-	res = &basic.Response{}
+	authType := req.AuthType
+	unitId := req.UnitId
+	password, _ := encrypt.BcryptEncrypt(consts.DefaultPassword)
+	for i := 0; i < len(req.GetAuthId()); i++ {
+		authId := req.AuthId[i]
+		name := req.UserName[i]
+		gender := req.Gender[i]
+		options := req.GetOptions()
+		var option *u.Option = nil
+		if options != nil {
+			option = options[i]
+		}
 
-	// 参数校验
-	if req.UnitId == "" || len(req.UserPhone) == 0 {
-		return nil, consts.ErrInvalidParams
+		// 判断 authType
+		switch authType {
+		case consts.AuthPhone:
+			{
+				// 关联手机号
+				// TODO: 开启事务?
+				// 先查找该手机号是否已经注册
+				logx.Info("正在查询用户: phone = %s, unitId = %s\n", authId, unitId)
+				user, err := s.UserMapper.FindOneByPhone(ctx, authId)
+				if err != nil && !errors.Is(err, consts.ErrNotFound) {
+					logx.Error("查询用户失败。phone = %s, unitId = %s\n", authId, unitId)
+					continue
+				}
+
+				if errors.Is(err, consts.ErrNotFound) {
+					// 未被注册，先在user表中添加数据
+					user = &usrMapper.User{
+						Phone:    authId,
+						Name:     name,
+						Gender:   gender,
+						Password: password,
+					}
+					userId, err := s.UserMapper.InsertWithEcho(ctx, user)
+					if err != nil {
+						logx.Error("创建用户失败。phone = %s, unitId = %s\n", authId, unitId)
+						continue
+					}
+					// 再在unit_user表中关联
+					err = s.UUMapper.Insert(ctx, &uuMapper.UnitUser{
+						UnitId:  unitId,
+						UserId:  *userId,
+						Options: option,
+					})
+					if err != nil {
+						logx.Error("创建用户关联失败。userId = %s, unitId = %s, phone = %s\n", userId, unitId, authId)
+						continue
+					}
+					logx.Info("创建用户关联成功！userId = %s, unitId = %s, phone = %s\n", userId, unitId, authId)
+				} else {
+					// 已经被注册，则判断是否已经被关联，若无关联则关联，已关联则跳过（不报错）
+					userId := user.Id
+					r, err := s.UUMapper.FindOneByUU(ctx, userId, unitId)
+					if err != nil {
+						logx.Error("查询用户失败。phone = %s, unitId = %s\n", authId, unitId)
+						continue
+					}
+					// 已经有关联，跳过
+					if r != nil {
+						logx.Info("用户和该单位已经绑定。userId = %s, unitId = %s, phone = %s\n", userId, unitId, authId)
+						continue
+					}
+					// 无关联，则插入
+					err = s.UUMapper.Insert(ctx, &uuMapper.UnitUser{
+						UnitId:  unitId,
+						UserId:  userId,
+						Options: option,
+					})
+					if err != nil {
+						logx.Error("创建用户关联失败。userId = %s, unitId = %s, phone = %s\n", userId, unitId, authId)
+						continue
+					}
+					logx.Info("创建用户关联成功！userId = %s, unitId = %s, phone = %s\n", userId, unitId, authId)
+				}
+			}
+		case consts.AuthStudentId:
+			{
+				// 关联学号
+				// 先根据学号(authId -> studentId)和unitId查找是否已经存在
+				// 此时如果记录存在，则表示已经有user账号且关联完成
+				unitUser, err := s.UUMapper.FindOneByUnitAndStu(ctx, authId, unitId)
+				if err != nil && !errors.Is(err, consts.ErrNotFound) {
+					logx.Error("查询用户失败。studentId = %s, unitId = %s\n", authId, unitId)
+					continue
+				}
+
+				if unitUser != nil {
+					// 如果已经存在，则直接跳过
+					logx.Info("该用户已经创建且关联。userId = %s, unitId = %s, studentId = %s,\n", unitUser.UserId, unitId, authId)
+					continue
+				}
+
+				// 如果不存在，则先进行user创建
+				userId, err := s.UserMapper.InsertWithEcho(ctx, &usrMapper.User{
+					Password: password,
+					Name:     name,
+					Gender:   gender,
+				})
+				if err != nil {
+					logx.Error("创建用户失败。studentId = %s, unitId = %s\n", authId, unitId)
+					continue
+				}
+
+				// 创建后进行关联
+				err = s.UUMapper.Insert(ctx, &uuMapper.UnitUser{
+					UnitId:    unitId,
+					UserId:    *userId,
+					StudentId: authId,
+					Options:   option,
+				})
+				if err != nil {
+					logx.Error("创建用户关联失败。userId = %s, unitId = %s, studentId = %s\n", userId, unitId, authId)
+					continue
+				}
+				logx.Info("创建用户关联成功！userId = %s, unitId = %s, studentId = %s\n", userId, unitId, authId)
+			}
+		}
 	}
-
-	// 验证单位是否存在
-	_, err = s.UnitMapper.FindOne(ctx, req.UnitId)
-	if err != nil {
-		if errors.Is(err, consts.ErrNotFound) {
-			return nil, consts.ErrUnitNotExist
-		}
-		return nil, err
-	}
-
-	// 遍历手机号列表
-	for _, phone := range req.UserPhone {
-		// 查询用户是否已存在
-		user, err := s.UserMapper.FindOneByPhone(ctx, phone)
-
-		var userId string
-		if errors.Is(err, consts.ErrNotFound) {
-			// 用户不存在，创建新用户
-			// 生成统一默认密码
-			defaultPassword, err := encrypt.BcryptEncrypt("123456") // 默认密码示例
-			if err != nil {
-				continue
-			}
-
-			newUser := &usrMapper.User{
-				Phone:    phone,
-				Password: defaultPassword,
-				Name:     phone,           // 默认使用手机号作为名称
-				Status:   "need_complete", // 需要完善信息
-			}
-
-			err = s.UserMapper.Insert(ctx, newUser)
-			if err != nil {
-				continue
-			}
-
-			userId = newUser.Id.Hex()
-		} else if err != nil {
-			// 查询出错，跳过当前手机号
-			continue
-		} else {
-			// 用户已存在
-			userId = user.Id.Hex()
-		}
-
-		// 检查关联是否已存在
-		exists, err := s.UnitMapper.CheckLinkExists(ctx, req.UnitId, userId)
-		if err != nil {
-			continue
-		}
-
-		// 如果关联不存在，则创建关联
-		if !exists {
-			err = s.UnitMapper.LinkUser(ctx, req.UnitId, userId)
-			if err != nil {
-				continue
-			}
-		}
-	}
-
-	// 返回成功响应
-	res.Code = 0
-	res.Msg = "success"
-	return res, nil
+	return result.ResponseOk(), nil
 }
 
 func (s *UnitService) UnitUpdateInfo(ctx context.Context, req *u.UnitUpdateInfoReq) (res *basic.Response, err error) {

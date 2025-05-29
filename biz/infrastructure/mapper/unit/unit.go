@@ -6,6 +6,8 @@ import (
 )
 
 type Unit struct {
+	// TODO: bson
+
 	Id         primitive.ObjectID `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
 	Phone      string             `protobuf:"bytes,2,opt,name=phone" json:"phone,omitempty"`
 	Password   string             `protobuf:"bytes,3,opt,name=password" json:"password,omitempty"`

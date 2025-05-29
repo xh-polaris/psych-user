@@ -5,6 +5,7 @@ import (
 	"github.com/google/wire"
 	"github.com/xh-polaris/psych-idl/kitex_gen/basic"
 	u "github.com/xh-polaris/psych-idl/kitex_gen/user"
+	"github.com/xh-polaris/psych-pkg/util/logx"
 	"github.com/xh-polaris/psych-user/biz/application/service"
 )
 
@@ -32,9 +33,14 @@ type UnitController struct {
 	UnitService *service.UnitService
 }
 
+var UnitControllerSet = wire.NewSet(
+	wire.Struct(new(UnitController), "*"),
+	wire.Bind(new(IUnitController), new(*UnitController)),
+)
+
 func (u UnitController) UnitSignUp(ctx context.Context, req *u.UnitSignUpReq) (res *basic.Response, err error) {
-	//TODO implement me
-	panic("implement me")
+	logx.Info("UnitSignUp", req)
+	return u.UnitService.UnitSignUp(ctx, req)
 }
 
 func (u UnitController) UnitGetInfo(ctx context.Context, req *u.UnitGetInfoReq) (res *u.UnitGetInfoResp, err error) {
@@ -93,8 +99,8 @@ func (u UnitController) UnitPageQueryView(ctx context.Context, req *u.UnitPageQu
 }
 
 func (u UnitController) UnitCreateAndLinkUser(ctx context.Context, req *u.UnitCreateAndLinkUserReq) (res *basic.Response, err error) {
-	//TODO implement me
-	panic("implement me")
+	logx.Info("UnitCreateAndLinkUser", req)
+	return u.UnitService.UnitCreateAndLinkUser(ctx, req)
 }
 
 func (u UnitController) UnitCreateAndLinkView(ctx context.Context, req *u.UnitCreateAndLinkViewReq) (res *basic.Response, err error) {
@@ -116,8 +122,3 @@ func (u UnitController) UnitModelUpdateInfo(ctx context.Context, req *u.UnitMode
 	//TODO implement me
 	panic("implement me")
 }
-
-var UnitControllerSet = wire.NewSet(
-	wire.Struct(new(UnitController), "*"),
-	wire.Bind(new(IUnitController), new(*UnitController)),
-)

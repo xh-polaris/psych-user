@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	prefixUserCacheKey        = "cache:user"
-	CollectionName            = "user"
-	SidUnitLinkCollectionName = "user_student_unit_link"
+	prefixUserCacheKey = "cache:user"
+	CollectionName     = "user"
+	UnitUserCollection = "unit_user"
 )
 
 type IMongoMapper interface {
@@ -34,7 +34,7 @@ type MongoMapper struct {
 
 func NewMongoMapper(config *config.Config) *MongoMapper {
 	conn := monc.MustNewModel(config.Mongo.URL, config.Mongo.DB, CollectionName, config.Cache)
-	linkConn := monc.MustNewModel(config.Mongo.URL, config.Mongo.DB, SidUnitLinkCollectionName, config.Cache)
+	linkConn := monc.MustNewModel(config.Mongo.URL, config.Mongo.DB, UnitUserCollection, config.Cache)
 	return &MongoMapper{
 		conn:     conn,
 		linkConn: linkConn,
@@ -42,13 +42,24 @@ func NewMongoMapper(config *config.Config) *MongoMapper {
 }
 
 func (m *MongoMapper) Insert(ctx context.Context, user *User) error {
-	if user.Id.IsZero() {
-		user.Id = primitive.NewObjectID()
-		user.CreateTime = time.Now()
-		user.UpdateTime = user.CreateTime
-	}
+	user.Id = primitive.NewObjectID().Hex()
+	user.CreateTime = time.Now()
+	user.UpdateTime = user.CreateTime
 	_, err := m.conn.InsertOneNoCache(ctx, user)
 	return err
+}
+
+func (m *MongoMapper) InsertWithEcho(ctx context.Context, user *User) (*string, error) {
+	user.Id = primitive.NewObjectID().Hex()
+	user.CreateTime = time.Now()
+	user.UpdateTime = user.CreateTime
+	res, err := m.conn.InsertOneNoCache(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	// 获取回显id
+	id := res.InsertedID.(primitive.ObjectID).Hex()
+	return &id, err
 }
 
 func (m *MongoMapper) InsertMany(ctx context.Context, users []*User) error {
@@ -56,13 +67,11 @@ func (m *MongoMapper) InsertMany(ctx context.Context, users []*User) error {
 		return nil
 	}
 
-	currentTime := time.Now()
+	now := time.Now()
 	for _, user := range users {
-		if user.Id.IsZero() {
-			user.Id = primitive.NewObjectID()
-			user.CreateTime = currentTime
-			user.UpdateTime = currentTime
-		}
+		user.Id = primitive.NewObjectID().Hex()
+		user.CreateTime = now
+		user.UpdateTime = now
 
 		// 逐个插入文档
 		_, err := m.conn.InsertOneNoCache(ctx, user)
@@ -81,13 +90,9 @@ func (m *MongoMapper) Update(ctx context.Context, user *User) error {
 }
 
 func (m *MongoMapper) FindOne(ctx context.Context, id string) (*User, error) {
-	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, consts.ErrInvalidObjectId
-	}
 	var u User
-	err = m.conn.FindOneNoCache(ctx, &u, bson.M{
-		consts.ID: oid,
+	err := m.conn.FindOneNoCache(ctx, &u, bson.M{
+		consts.ID: id,
 	})
 	if err != nil {
 		return nil, consts.ErrNotFound
@@ -123,17 +128,17 @@ func (m *MongoMapper) UpdateCount(ctx context.Context, id string, increment int6
 	return err
 }
 
-func (m *MongoMapper) FindUSULinkBySid(ctx context.Context, sid string) (*UserStudentUnit, error) {
-	oid, err := primitive.ObjectIDFromHex(sid)
-	if err != nil {
-		return nil, consts.ErrInvalidObjectId
-	}
-	var u UserStudentUnit
-	err = m.conn.FindOneNoCache(ctx, &u, bson.M{
-		consts.SID: oid,
-	})
-	if err != nil {
-		return nil, consts.ErrNotFound
-	}
-	return &u, nil
-}
+//func (m *MongoMapper) FindUSULinkBySid(ctx context.Context, sid string) (*UserStudentUnit, error) {
+//	oid, err := primitive.ObjectIDFromHex(sid)
+//	if err != nil {
+//		return nil, consts.ErrInvalidObjectId
+//	}
+//	var u UserStudentUnit
+//	err = m.conn.FindOneNoCache(ctx, &u, bson.M{
+//		consts.StudentId: oid,
+//	})
+//	if err != nil {
+//		return nil, consts.ErrNotFound
+//	}
+//	return &u, nil
+//}

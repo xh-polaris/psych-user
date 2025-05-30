@@ -42,7 +42,6 @@ func NewMongoMapper(config *config.Config) *MongoMapper {
 
 // Insert 插入新的单位记录
 func (m *MongoMapper) Insert(ctx context.Context, unit *Unit) error {
-	unit.Id = primitive.NewObjectID().Hex()
 	// 设置创建和更新时间
 	now := time.Now()
 	unit.CreateTime = now
@@ -71,8 +70,12 @@ func (m *MongoMapper) FindOneByPhone(ctx context.Context, phone string) (*Unit, 
 // FindOne 根据ID查找单位
 func (m *MongoMapper) FindOne(ctx context.Context, id string) (*Unit, error) {
 	var u Unit
-	err := m.conn.FindOneNoCache(ctx, &u, bson.M{
-		consts.ID: id,
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, consts.ErrInvalidObjectId
+	}
+	err = m.conn.FindOneNoCache(ctx, &u, bson.M{
+		consts.ID_: oid,
 	})
 
 	if err != nil {
@@ -87,14 +90,18 @@ func (m *MongoMapper) FindOne(ctx context.Context, id string) (*Unit, error) {
 
 // LinkUser 创建单位和用户的关联
 func (m *MongoMapper) LinkUser(ctx context.Context, unitId, userId string) error {
-	oid, err := primitive.ObjectIDFromHex(unitId)
+	unitOid, err := primitive.ObjectIDFromHex(unitId)
+	if err != nil {
+		return consts.ErrInvalidObjectId
+	}
+	userOid, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
 		return consts.ErrInvalidObjectId
 	}
 
 	link := bson.M{
-		"unit_id": oid,
-		"user_id": userId,
+		"unit_id": unitOid,
+		"user_id": userOid,
 	}
 
 	_, err = m.linkConn.InsertOneNoCache(ctx, link)
@@ -103,15 +110,19 @@ func (m *MongoMapper) LinkUser(ctx context.Context, unitId, userId string) error
 
 // CheckLinkExists 检查单位和用户的关联是否已存在
 func (m *MongoMapper) CheckLinkExists(ctx context.Context, unitId, userId string) (bool, error) {
-	oid, err := primitive.ObjectIDFromHex(unitId)
+	unitOid, err := primitive.ObjectIDFromHex(unitId)
+	if err != nil {
+		return false, consts.ErrInvalidObjectId
+	}
+	userOid, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
 		return false, consts.ErrInvalidObjectId
 	}
 
 	var result bson.M
 	err = m.linkConn.FindOneNoCache(ctx, &result, bson.M{
-		"unit_id": oid,
-		"user_id": userId,
+		"unit_id": unitOid,
+		"user_id": userOid,
 	})
 
 	if err != nil {

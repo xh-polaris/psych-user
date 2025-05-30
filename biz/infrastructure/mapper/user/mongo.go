@@ -42,7 +42,6 @@ func NewMongoMapper(config *config.Config) *MongoMapper {
 }
 
 func (m *MongoMapper) Insert(ctx context.Context, user *User) error {
-	user.Id = primitive.NewObjectID().Hex()
 	user.CreateTime = time.Now()
 	user.UpdateTime = user.CreateTime
 	_, err := m.conn.InsertOneNoCache(ctx, user)
@@ -50,7 +49,6 @@ func (m *MongoMapper) Insert(ctx context.Context, user *User) error {
 }
 
 func (m *MongoMapper) InsertWithEcho(ctx context.Context, user *User) (*string, error) {
-	user.Id = primitive.NewObjectID().Hex()
 	user.CreateTime = time.Now()
 	user.UpdateTime = user.CreateTime
 	res, err := m.conn.InsertOneNoCache(ctx, user)
@@ -69,7 +67,6 @@ func (m *MongoMapper) InsertMany(ctx context.Context, users []*User) error {
 
 	now := time.Now()
 	for _, user := range users {
-		user.Id = primitive.NewObjectID().Hex()
 		user.CreateTime = now
 		user.UpdateTime = now
 
@@ -85,17 +82,24 @@ func (m *MongoMapper) InsertMany(ctx context.Context, users []*User) error {
 
 func (m *MongoMapper) Update(ctx context.Context, user *User) error {
 	user.UpdateTime = time.Now()
-	_, err := m.conn.UpdateByIDNoCache(ctx, user.Id, bson.M{"$set": user})
+	_, err := m.conn.UpdateByIDNoCache(ctx, user.ID, bson.M{"$set": user})
 	return err
 }
 
 func (m *MongoMapper) FindOne(ctx context.Context, id string) (*User, error) {
 	var u User
-	err := m.conn.FindOneNoCache(ctx, &u, bson.M{
-		consts.ID: id,
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, consts.ErrInvalidObjectId
+	}
+	err = m.conn.FindOneNoCache(ctx, &u, bson.M{
+		consts.ID_: oid,
 	})
 	if err != nil {
-		return nil, consts.ErrNotFound
+		if errors.Is(err, monc.ErrNotFound) {
+			return nil, consts.ErrNotFound
+		}
+		return nil, err
 	}
 	return &u, nil
 }

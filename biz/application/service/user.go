@@ -124,10 +124,8 @@ func (s *UserService) UserGetInfo(ctx context.Context, req *u.UserGetInfoReq) (r
 		if err != nil {
 			return nil, err
 		}
-		arr := []*u.Option{uu.Options}
-		arr = append(arr, uu.Options)
-		res.Options = arr
-		// res.Options = uu.Options
+		res.Options = uu.Options
+		res.StudentId = &uu.StudentId
 	}
 	return res, nil
 }

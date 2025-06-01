@@ -12,12 +12,11 @@ import (
 	usrmapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/user"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/encrypt"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/reg"
-	"github.com/xh-polaris/psych-user/biz/infrastructure/util/result"
 )
 
 type IUserService interface {
 	UserGetInfo(ctx context.Context, req *u.UserGetInfoReq) (res *u.UserGetInfoResp, err error)
-	UserSignIn(ctx context.Context, req *u.UserSignInReq) (res *basic.Response, err error)
+	UserSignIn(ctx context.Context, req *u.UserSignInReq) (res *u.UserSignInResp, err error)
 
 	UserSignUp(ctx context.Context, req *u.UserSignUpReq) (res *basic.Response, err error)
 	UserUpdateInfo(ctx context.Context, req *u.UserUpdateInfoReq) (res *basic.Response, err error)
@@ -41,7 +40,7 @@ func (s *UserService) UserSignUp(ctx context.Context, req *u.UserSignUpReq) (res
 	return nil, err
 }
 
-func (s *UserService) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res *basic.Response, err error) {
+func (s *UserService) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res *u.UserSignInResp, err error) {
 	// 根据 authType 选择登录方式
 	authType := req.AuthType
 	switch authType {
@@ -60,7 +59,7 @@ func (s *UserService) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res
 			if verifyCode != "" {
 				// TODO: 验证码逻辑
 				if *req.VerifyCode == "xh-polaris" {
-					return result.ResponseOk(), nil
+					return nil, nil
 				} else {
 					return nil, consts.ErrUserVerify
 				}
@@ -75,7 +74,8 @@ func (s *UserService) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res
 			if !encrypt.BcryptCheck(password, user.Password) {
 				return nil, consts.ErrUserPasswordMismatch
 			}
-			return result.ResponseOk(), nil
+			// TODO 完善手机登录逻辑
+			return nil, nil
 		}
 	case consts.AuthStudentId:
 		{
@@ -94,7 +94,11 @@ func (s *UserService) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res
 			if !encrypt.BcryptCheck(password, usr.Password) {
 				return nil, consts.ErrUserPasswordMismatch
 			}
-			return result.ResponseOk(), nil
+			return &u.UserSignInResp{
+				UnitId:    user.UnitId,
+				StudentId: user.StudentId,
+				UserId:    user.StudentId,
+			}, nil
 		}
 	}
 	return nil, consts.ErrUserSignIn

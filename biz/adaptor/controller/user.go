@@ -11,7 +11,7 @@ import (
 
 type IUserController interface {
 	UserGetInfo(ctx context.Context, req *u.UserGetInfoReq) (res *u.UserGetInfoResp, err error)
-	UserSignIn(ctx context.Context, req *u.UserSignInReq) (res *basic.Response, err error)
+	UserSignIn(ctx context.Context, req *u.UserSignInReq) (res *u.UserSignInResp, err error)
 	UserSignUp(ctx context.Context, req *u.UserSignUpReq) (res *basic.Response, err error)
 	UserUpdateInfo(ctx context.Context, req *u.UserUpdateInfoReq) (res *basic.Response, err error)
 	UserUpdatePassword(ctx context.Context, req *u.UserUpdatePasswordReq) (res *basic.Response, err error)
@@ -32,7 +32,7 @@ func (u UserController) UserGetInfo(ctx context.Context, req *u.UserGetInfoReq) 
 	return u.UserService.UserGetInfo(ctx, req)
 }
 
-func (u UserController) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res *basic.Response, err error) {
+func (u UserController) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res *u.UserSignInResp, err error) {
 	return u.UserService.UserSignIn(ctx, req)
 }
 

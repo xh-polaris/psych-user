@@ -97,7 +97,7 @@ func (s *UserService) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res
 			return &u.UserSignInResp{
 				UnitId:    user.UnitId,
 				StudentId: user.StudentId,
-				UserId:    user.StudentId,
+				UserId:    user.UserId,
 			}, nil
 		}
 	}

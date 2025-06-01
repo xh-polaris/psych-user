@@ -13,7 +13,7 @@ require (
 	github.com/xh-polaris/psych-pkg v0.0.0-20250521140101-2e8463201b49
 	github.com/zeromicro/go-zero v1.8.3
 	go.mongodb.org/mongo-driver v1.17.3
-	golang.org/x/crypto v0.33.0
+	golang.org/x/crypto v0.35.0
 	google.golang.org/grpc v1.68.0
 )
 

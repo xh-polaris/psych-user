@@ -12,6 +12,7 @@ import (
 	uuMapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/unit_user"
 	usrMapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/user"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/encrypt"
+	"github.com/xh-polaris/psych-user/biz/infrastructure/util/reg"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/result"
 )
 
@@ -51,7 +52,7 @@ func (s *UnitService) UnitSignUp(ctx context.Context, req *u.UnitSignUpReq) (res
 	res = &basic.Response{}
 
 	// 参数校验
-	if req.Unit == nil || req.Unit.Phone == "" || req.Unit.Password == "" || req.Unit.Name == "" {
+	if req.Unit == nil || req.Unit.Phone == "" || req.Unit.Password == "" || req.Unit.Name == "" || !reg.CheckMobile(req.Unit.Phone) {
 		logx.Error("UnitSignUp fail")
 		return nil, consts.ErrUnitSignUp
 	}
@@ -78,7 +79,7 @@ func (s *UnitService) UnitSignUp(ctx context.Context, req *u.UnitSignUpReq) (res
 		Address:  req.Unit.Address,
 		Contact:  req.Unit.Contact,
 		Level:    req.Unit.Level,
-		Status:   "active",
+		Status:   consts.Active,
 	}
 
 	// 保存到数据库
@@ -96,7 +97,7 @@ func (s *UnitService) UnitStrongVerify(ctx context.Context, req *u.UnitStrongVer
 	res = &basic.Response{}
 
 	// 参数校验
-	if req.Phone == "" || req.GetPhone() == "" {
+	if req.Phone == "" || req.GetPhone() == "" || !reg.CheckMobile(req.Phone) {
 		return nil, consts.ErrInvalidParams
 	}
 
@@ -144,7 +145,7 @@ func (s *UnitService) UnitGetInfo(ctx context.Context, req *u.UnitGetInfoReq) (r
 	// 构建响应
 	res = &u.UnitGetInfoResp{
 		Unit: &u.Unit{
-			Id:         unit.Id,
+			Id:         unit.ID.Hex(),
 			Phone:      unit.Phone,
 			Password:   "", // 密码字段为空
 			Name:       unit.Name,
@@ -257,7 +258,7 @@ func (s *UnitService) UnitCreateAndLinkUser(ctx context.Context, req *u.UnitCrea
 					logx.Info("创建用户关联成功！userId = %s, unitId = %s, phone = %s\n", userId, unitId, authId)
 				} else {
 					// 已经被注册，则判断是否已经被关联，若无关联则关联，已关联则跳过（不报错）
-					userId := user.Id
+					userId := user.ID.Hex()
 					r, err := s.UUMapper.FindOneByUU(ctx, userId, unitId)
 					if err != nil {
 						logx.Error("查询用户失败。phone = %s, unitId = %s\n", authId, unitId)

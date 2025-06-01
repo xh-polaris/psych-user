@@ -11,6 +11,7 @@ import (
 	uumapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/unit_user"
 	usrmapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/user"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/encrypt"
+	"github.com/xh-polaris/psych-user/biz/infrastructure/util/reg"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/result"
 )
 
@@ -51,7 +52,7 @@ func (s *UserService) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res
 			phone := req.GetAuthId()
 			password := req.GetPassword()
 			verifyCode := req.GetVerifyCode()
-			if phone == "" {
+			if phone == "" || !reg.CheckMobile(phone) {
 				return nil, consts.ErrUserNotExist
 			}
 
@@ -100,14 +101,14 @@ func (s *UserService) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res
 }
 func (s *UserService) UserGetInfo(ctx context.Context, req *u.UserGetInfoReq) (res *u.UserGetInfoResp, err error) {
 	userId := req.GetUserId()
-	logx.Info("正在查找用户信息: userId = %d\n", userId)
+	logx.Info("正在查找用户信息: ", userId)
 	user, err := s.UserMapper.FindOne(ctx, userId)
 	if err != nil {
 		return nil, consts.ErrUserNotExist
 	}
 
 	res = &u.UserGetInfoResp{User: &u.User{
-		Id:         user.Id,
+		Id:         user.ID.Hex(),
 		Phone:      user.Phone,
 		Password:   "",
 		Name:       user.Name,

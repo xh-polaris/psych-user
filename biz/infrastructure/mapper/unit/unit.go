@@ -13,7 +13,7 @@ type Unit struct {
 	Address    string             `bson:"address,omitempty" json:"address,omitempty"`
 	Contact    string             `bson:"contact,omitempty" json:"contact,omitempty"`
 	Level      int32              `bson:"level" json:"level,omitempty"`
-	Status     string             `bson:"status" json:"status,omitempty"`
+	Status     int32              `bson:"status" json:"status,omitempty"`
 	CreateTime time.Time          `bson:"create_time,omitempty" json:"createTime,omitempty"`
 	UpdateTime time.Time          `bson:"update_time,omitempty" json:"updateTime,omitempty"`
 	DeleteTime time.Time          `bson:"delete_time,omitempty" json:"deleteTime,omitempty"`

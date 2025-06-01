@@ -42,6 +42,7 @@ func NewMongoMapper(config *config.Config) *MongoMapper {
 
 // Insert 插入新的单位记录
 func (m *MongoMapper) Insert(ctx context.Context, unit *Unit) error {
+	unit.ID = primitive.NewObjectID()
 	// 设置创建和更新时间
 	now := time.Now()
 	unit.CreateTime = now
@@ -75,7 +76,7 @@ func (m *MongoMapper) FindOne(ctx context.Context, id string) (*Unit, error) {
 		return nil, consts.ErrInvalidObjectId
 	}
 	err = m.conn.FindOneNoCache(ctx, &u, bson.M{
-		consts.ID_: oid,
+		consts.ID: oid,
 	})
 
 	if err != nil {
@@ -100,8 +101,8 @@ func (m *MongoMapper) LinkUser(ctx context.Context, unitId, userId string) error
 	}
 
 	link := bson.M{
-		"unit_id": unitOid,
-		"user_id": userOid,
+		consts.UnitId: unitOid,
+		consts.UserID: userOid,
 	}
 
 	_, err = m.linkConn.InsertOneNoCache(ctx, link)
@@ -121,8 +122,8 @@ func (m *MongoMapper) CheckLinkExists(ctx context.Context, unitId, userId string
 
 	var result bson.M
 	err = m.linkConn.FindOneNoCache(ctx, &result, bson.M{
-		"unit_id": unitOid,
-		"user_id": userOid,
+		consts.UnitId: unitOid,
+		consts.UserID: userOid,
 	})
 
 	if err != nil {

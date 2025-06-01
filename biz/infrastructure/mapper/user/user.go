@@ -11,8 +11,8 @@ type User struct {
 	Password   string             `bson:"password" json:"password,omitempty"` // 考虑是否应该存储密码明文
 	Name       string             `bson:"name" json:"name,omitempty"`
 	Birth      string             `bson:"birth,omitempty" json:"birth,omitempty"` // 建议使用 time.Time 类型
-	Gender     string             `bson:"gender,omitempty" json:"gender,omitempty"`
-	Status     string             `bson:"status" json:"status,omitempty"` // 建议使用 int 或 bool 类型
+	Gender     int32              `bson:"gender,omitempty" json:"gender,omitempty"`
+	Status     int32              `bson:"status" json:"status,omitempty"` // 建议使用 int 或 bool 类型
 	CreateTime time.Time          `bson:"create_time,omitempty" json:"createTime,omitempty"`
 	UpdateTime time.Time          `bson:"update_time,omitempty" json:"updateTime,omitempty"`
 	DeleteTime time.Time          `bson:"delete_time,omitempty" json:"deleteTime,omitempty"`

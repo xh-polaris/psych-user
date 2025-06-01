@@ -3,11 +3,11 @@ package unit_user
 import (
 	"context"
 	"errors"
-	"github.com/xh-polaris/psych-pkg/util/logx"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/config"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/consts"
 	"github.com/zeromicro/go-zero/core/stores/monc"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const (
@@ -33,6 +33,7 @@ func NewMongoMapper(config *config.Config) *MongoMapper {
 }
 
 func (m MongoMapper) Insert(ctx context.Context, u *UnitUser) error {
+	u.Id = primitive.NewObjectID()
 	_, err := m.conn.InsertOneNoCache(ctx, u)
 	return err
 }
@@ -54,7 +55,6 @@ func (m MongoMapper) FindOneByUU(ctx context.Context, userId string, unitId stri
 }
 
 func (m MongoMapper) FindOneByUnitAndStu(ctx context.Context, unitId string, studentId string) (*UnitUser, error) {
-	logx.Info("调用mapper方法")
 	var u UnitUser
 	err := m.conn.FindOneNoCache(ctx, &u, bson.M{
 		consts.UnitId:    unitId,

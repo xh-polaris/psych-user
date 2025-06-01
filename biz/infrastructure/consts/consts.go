@@ -2,8 +2,7 @@ package consts
 
 // 数据库相关
 const (
-	ID_        = "_id"
-	ID         = "id"
+	ID         = "_id"
 	StudentId  = "student_id"
 	UserID     = "user_id"
 	UnitId     = "unit_id"
@@ -25,4 +24,17 @@ const (
 // password
 const (
 	DefaultPassword = "123456"
+)
+
+// status
+const (
+	Active  = 0
+	Deleted = 1
+)
+
+// gender
+const (
+	Unknown = 0
+	Male    = 1
+	Female  = 2
 )

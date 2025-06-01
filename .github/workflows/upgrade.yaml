@@ -16,7 +16,7 @@ on:
 env:
   REGISTRY: docker.io
   USERNAME: xhpolaris
-  IMAGE_NAME: essay-show
+  IMAGE_NAME: psych-user
 
 jobs:
   build:

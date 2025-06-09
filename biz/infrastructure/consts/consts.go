@@ -15,10 +15,18 @@ const (
 	NotEqual   = "$ne"
 )
 
+// createType
+const (
+	CreateByPhone     = 1
+	CreateByStudentId = 2
+	CreateByEmail     = 3
+)
+
 // authType
 const (
-	AuthPhone     = 1
-	AuthStudentId = 2
+	AuthPhoneAndPwd     = 1
+	AuthStudentIdAndPwd = 2
+	AuthPhoneAndCode    = 3
 )
 
 // password

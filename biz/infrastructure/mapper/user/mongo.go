@@ -49,17 +49,17 @@ func (m *MongoMapper) Insert(ctx context.Context, user *User) error {
 	return err
 }
 
-func (m *MongoMapper) InsertWithEcho(ctx context.Context, user *User) (*string, error) {
+func (m *MongoMapper) InsertWithEcho(ctx context.Context, user *User) (string, error) {
 	user.ID = primitive.NewObjectID()
 	user.CreateTime = time.Now()
 	user.UpdateTime = user.CreateTime
 	res, err := m.conn.InsertOneNoCache(ctx, user)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	// 获取回显id
 	id := res.InsertedID.(primitive.ObjectID).Hex()
-	return &id, err
+	return id, err
 }
 
 func (m *MongoMapper) InsertMany(ctx context.Context, users []*User) error {

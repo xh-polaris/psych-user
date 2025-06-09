@@ -45,7 +45,7 @@ func (s *UserService) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res
 	// 根据 authType 选择登录方式
 	authType := req.AuthType
 	switch authType {
-	case consts.AuthPhone:
+	case consts.AuthPhoneAndPwd:
 		{
 			// 通过手机号登录
 			// 获取手机号
@@ -77,7 +77,7 @@ func (s *UserService) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res
 			}
 			return result.ResponseOk(), nil
 		}
-	case consts.AuthStudentId:
+	case consts.AuthStudentIdAndPwd:
 		{
 			// 通过学号登录
 			studentId := req.GetAuthId()

@@ -7,7 +7,6 @@ import (
 	"github.com/xh-polaris/psych-user/biz/infrastructure/consts"
 	"github.com/zeromicro/go-zero/core/stores/monc"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
@@ -57,7 +56,6 @@ func createCompoundIndex(collection *mongo.Collection) error {
 }
 
 func (m MongoMapper) Insert(ctx context.Context, u *UnitUser) error {
-	u.Id = primitive.NewObjectID()
 	_, err := m.conn.InsertOneNoCache(ctx, u)
 	return err
 }

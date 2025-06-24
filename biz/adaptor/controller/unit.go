@@ -37,7 +37,7 @@ var UnitControllerSet = wire.NewSet(
 	wire.Bind(new(IUnitController), new(*UnitController)),
 )
 
-func (u *UnitController) UnitSignUp(ctx context.Context, req *u.UnitSignUpReq) (res *basic.Response, err error) {
+func (u *UnitController) UnitSignUp(ctx context.Context, req *u.UnitSignUpReq) (res *u.UnitSignUpResp, err error) {
 	logx.Info("UnitSignUp", req)
 	return u.UnitService.UnitSignUp(ctx, req)
 }

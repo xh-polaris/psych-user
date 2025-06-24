@@ -18,6 +18,7 @@ import (
 type IUserService interface {
 	UserSignUp(ctx context.Context, req *u.UserSignUpReq) (res *u.UserSignUpResp, err error)
 	UserGetInfo(ctx context.Context, req *u.UserGetInfoReq) (res *u.UserGetInfoResp, err error)
+  
 	UserUpdateInfo(ctx context.Context, req *u.UserUpdateInfoReq) (res *basic.Response, err error)
 	UserUpdatePassword(ctx context.Context, req *u.UserUpdatePasswordReq) (res *basic.Response, err error)
 	UserBelongUnit(ctx context.Context, req *u.UserBelongUnitReq) (res *u.UserBelongUnitResp, err error)
@@ -72,10 +73,12 @@ func (s *UserService) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res
 	case consts.AuthPhoneAndPwd:
 		{
 			userId, err := s.signInWithPhoneAndPwd(ctx, req)
+
 			if err != nil {
 				return nil, err
 			}
 			return &u.UserSignInResp{UserId: userId}, nil
+
 		}
 	case consts.AuthPhoneAndCode:
 		{
@@ -92,9 +95,11 @@ func (s *UserService) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res
 				return nil, err
 			}
 			return &u.UserSignInResp{
+
 				UnitId:    *unitId,
 				UserId:    *userId,
 				StudentId: studentId,
+
 			}, nil
 		}
 	}

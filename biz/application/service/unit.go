@@ -321,6 +321,11 @@ func (s *UnitService) createUserByStudentId(ctx context.Context, unitId string, 
 	password := user.Password
 	if password == "" {
 		password = encrypt.GetDefaultPwd()
+	} else {
+		pwd, err := encrypt.BcryptEncrypt(password)
+		if err != nil {
+		}
+		password = pwd
 	}
 	option := convert.OptionGen2Loc(user.GetOptions())
 

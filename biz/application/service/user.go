@@ -134,7 +134,7 @@ func (s *UserService) signInWithPhoneAndCode(ctx context.Context, req *u.UserSig
 
 func (s *UserService) signInWithStudentIdAndPwd(ctx context.Context, req *u.UserSignInReq) (userId, unitId, studentId *string, err error) {
 	// 根据 studentId + unitId 获取 userId
-	uu, err := s.UUMapper.FindOneByUnitAndStu(ctx, req.UnitId, *req.VerifyCode)
+	uu, err := s.UUMapper.FindOneByUnitAndStu(ctx, req.UnitId, req.AuthId)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -181,6 +181,7 @@ func (s *UserService) UserGetInfo(ctx context.Context, req *u.UserGetInfoReq) (r
 			return nil, err
 		}
 		res.UnitId = &unitId
+		res.StudentId = &uu.StudentId
 		res.Options = convert.OptionLoc2Gen(uu.Options)
 	}
 

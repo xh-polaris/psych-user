@@ -52,6 +52,21 @@ func (m *MongoMapper) Insert(ctx context.Context, unit *Unit) error {
 	return err
 }
 
+func (m *MongoMapper) InsertWithEcho(ctx context.Context, unit *Unit) (string, error) {
+	unit.ID = primitive.NewObjectID()
+	// 设置创建和更新时间
+	now := time.Now()
+	unit.CreateTime = now
+	unit.UpdateTime = now
+	res, err := m.conn.InsertOneNoCache(ctx, unit)
+	if err != nil {
+		return "", err
+	}
+	// 获取回显id
+	id := res.InsertedID.(primitive.ObjectID).Hex()
+	return id, err
+}
+
 // FindOneByPhone 根据手机号查找单位
 func (m *MongoMapper) FindOneByPhone(ctx context.Context, phone string) (*Unit, error) {
 	var u Unit
@@ -134,4 +149,25 @@ func (m *MongoMapper) CheckLinkExists(ctx context.Context, unitId, userId string
 	}
 
 	return true, nil
+}
+
+func (m *MongoMapper) UpdateBasicInfo(ctx context.Context, unit *Unit) error {
+	unit.UpdateTime = time.Now()
+	_, err := m.conn.UpdateByIDNoCache(ctx, unit.ID, bson.M{"$set": bson.M{
+		consts.Name:       unit.Name,
+		consts.Contact:    unit.Contact,
+		consts.Address:    unit.Address,
+		consts.Status:     unit.Status,
+		consts.UpdateTime: unit.UpdateTime,
+	}})
+	return err
+}
+
+func (m *MongoMapper) UpdatePassword(ctx context.Context, unitId, newPassword string) error {
+	unitOid, err := primitive.ObjectIDFromHex(unitId)
+	_, err = m.conn.UpdateByIDNoCache(ctx, unitOid, bson.M{"$set": bson.M{
+		consts.Password:   newPassword,
+		consts.UpdateTime: time.Now(),
+	}})
+	return err
 }

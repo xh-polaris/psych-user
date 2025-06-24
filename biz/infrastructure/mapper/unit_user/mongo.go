@@ -7,7 +7,10 @@ import (
 	"github.com/xh-polaris/psych-user/biz/infrastructure/consts"
 	"github.com/zeromicro/go-zero/core/stores/monc"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
+	"time"
 )
 
 const (
@@ -32,8 +35,27 @@ func NewMongoMapper(config *config.Config) *MongoMapper {
 	}
 }
 
+func createCompoundIndex(collection *mongo.Collection) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	indexModel := mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "student_id", Value: 1}, // 升序索引
+			{Key: "unit_id", Value: 1},    // 升序索引
+		},
+		Options: options.Index().SetName("student_unit"),
+	}
+
+	_, err := collection.Indexes().CreateOne(ctx, indexModel)
+	if err != nil {
+		return err
+	}
+	log.Println("联合索引创建成功：student_id + unit_id")
+	return nil
+}
+
 func (m MongoMapper) Insert(ctx context.Context, u *UnitUser) error {
-	u.Id = primitive.NewObjectID()
 	_, err := m.conn.InsertOneNoCache(ctx, u)
 	return err
 }

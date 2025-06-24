@@ -10,20 +10,19 @@ import (
 )
 
 type IUnitController interface {
-	UnitSignUp(ctx context.Context, req *u.UnitSignUpReq) (res *basic.Response, err error)
+	UnitSignUp(ctx context.Context, req *u.UnitSignUpReq) (res *u.UnitSignUpResp, err error)
 	UnitGetInfo(ctx context.Context, req *u.UnitGetInfoReq) (res *u.UnitGetInfoResp, err error)
 	UnitUpdateInfo(ctx context.Context, req *u.UnitUpdateInfoReq) (res *basic.Response, err error)
 	UnitUpdatePassword(ctx context.Context, req *u.UnitUpdatePasswordReq) (res *basic.Response, err error)
-	UnitStrongVerify(ctx context.Context, req *u.UnitStrongVerifyReq) (res *basic.Response, err error)
-	UnitWeakVerify(ctx context.Context, req *u.UnitWeakVerifyReq) (res *basic.Response, err error)
+	UnitCreateAndLinkUser(ctx context.Context, req *u.UnitCreateAndLinkUserReq) (res *basic.Response, err error)
+	UnitCreateAndLinkView(ctx context.Context, req *u.UnitCreateAndLinkViewReq) (res *basic.Response, err error)
+	UnitSignIn(ctx context.Context, req *u.UnitSignInReq) (res *u.UnitSignInResp, err error)
 	UnitCreateVerify(ctx context.Context, req *u.UnitCreateVerifyReq) (res *u.UnitCreateVerifyResp, err error)
-	UnitUpdateVerifyPassword(ctx context.Context, req *u.UnitUpdateVerifyPasswordReq) (res *basic.Response, err error)
+	UnitUpdateVerifyPassword(ctx context.Context, req *u.UnitUpdateVerifyReq) (res *basic.Response, err error)
 	UnitLinkUser(ctx context.Context, req *u.UnitLinkUserReq) (res *basic.Response, err error)
 	UnitLinkView(ctx context.Context, req *u.UnitLinkViewReq) (res *basic.Response, err error)
 	UnitPageQueryUser(ctx context.Context, req *u.UnitPageQueryUserReq) (res *u.UnitPageQueryUserResp, err error)
 	UnitPageQueryView(ctx context.Context, req *u.UnitPageQueryViewReq) (res *u.UnitPageQueryViewResp, err error)
-	UnitCreateAndLinkUser(ctx context.Context, req *u.UnitCreateAndLinkUserReq) (res *basic.Response, err error)
-	UnitCreateAndLinkView(ctx context.Context, req *u.UnitCreateAndLinkViewReq) (res *basic.Response, err error)
 	UnitGetAppInfo(ctx context.Context, req *u.UnitGetAppInfoReq) (res *u.UnitGetAppInfoResp, err error)
 	UnitModelGetInfo(ctx context.Context, req *u.UnitModelGetInfoReq) (res *u.UnitModelGetInfoResp, err error)
 	UnitModelUpdateInfo(ctx context.Context, req *u.UnitModelUpdateInfoReq) (res *basic.Response, err error)
@@ -38,87 +37,68 @@ var UnitControllerSet = wire.NewSet(
 	wire.Bind(new(IUnitController), new(*UnitController)),
 )
 
-func (u UnitController) UnitSignUp(ctx context.Context, req *u.UnitSignUpReq) (res *basic.Response, err error) {
+func (u *UnitController) UnitSignUp(ctx context.Context, req *u.UnitSignUpReq) (res *u.UnitSignUpResp, err error) {
 	logx.Info("UnitSignUp", req)
 	return u.UnitService.UnitSignUp(ctx, req)
 }
 
-func (u UnitController) UnitGetInfo(ctx context.Context, req *u.UnitGetInfoReq) (res *u.UnitGetInfoResp, err error) {
-	//TODO implement me
-	panic("implement me")
+func (u *UnitController) UnitGetInfo(ctx context.Context, req *u.UnitGetInfoReq) (res *u.UnitGetInfoResp, err error) {
+	logx.Info("UnitGetInfo", req)
+	return u.UnitService.UnitGetInfo(ctx, req)
 }
-
-func (u UnitController) UnitUpdateInfo(ctx context.Context, req *u.UnitUpdateInfoReq) (res *basic.Response, err error) {
-	//TODO implement me
-	panic("implement me")
+func (u *UnitController) UnitUpdateInfo(ctx context.Context, req *u.UnitUpdateInfoReq) (res *basic.Response, err error) {
+	logx.Info("UnitUpdateInfo", req)
+	return u.UnitService.UnitUpdateInfo(ctx, req)
 }
-
-func (u UnitController) UnitUpdatePassword(ctx context.Context, req *u.UnitUpdatePasswordReq) (res *basic.Response, err error) {
-	//TODO implement me
-	panic("implement me")
+func (u *UnitController) UnitUpdatePassword(ctx context.Context, req *u.UnitUpdatePasswordReq) (res *basic.Response, err error) {
+	logx.Info("UnitUpdatePassword", req)
+	return u.UnitService.UnitUpdatePassword(ctx, req)
 }
-
-func (u UnitController) UnitStrongVerify(ctx context.Context, req *u.UnitStrongVerifyReq) (res *basic.Response, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (u UnitController) UnitWeakVerify(ctx context.Context, req *u.UnitWeakVerifyReq) (res *basic.Response, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (u UnitController) UnitCreateVerify(ctx context.Context, req *u.UnitCreateVerifyReq) (res *u.UnitCreateVerifyResp, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (u UnitController) UnitUpdateVerifyPassword(ctx context.Context, req *u.UnitUpdateVerifyPasswordReq) (res *basic.Response, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (u UnitController) UnitLinkUser(ctx context.Context, req *u.UnitLinkUserReq) (res *basic.Response, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (u UnitController) UnitLinkView(ctx context.Context, req *u.UnitLinkViewReq) (res *basic.Response, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (u UnitController) UnitPageQueryUser(ctx context.Context, req *u.UnitPageQueryUserReq) (res *u.UnitPageQueryUserResp, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (u UnitController) UnitPageQueryView(ctx context.Context, req *u.UnitPageQueryViewReq) (res *u.UnitPageQueryViewResp, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (u UnitController) UnitCreateAndLinkUser(ctx context.Context, req *u.UnitCreateAndLinkUserReq) (res *basic.Response, err error) {
+func (u *UnitController) UnitCreateAndLinkUser(ctx context.Context, req *u.UnitCreateAndLinkUserReq) (res *basic.Response, err error) {
 	logx.Info("UnitCreateAndLinkUser", req)
 	return u.UnitService.UnitCreateAndLinkUser(ctx, req)
 }
-
-func (u UnitController) UnitCreateAndLinkView(ctx context.Context, req *u.UnitCreateAndLinkViewReq) (res *basic.Response, err error) {
-	//TODO implement me
-	panic("implement me")
+func (u *UnitController) UnitCreateAndLinkView(ctx context.Context, req *u.UnitCreateAndLinkViewReq) (res *basic.Response, err error) {
+	logx.Info("UnitCreateAndLinkView", req)
+	return u.UnitService.UnitCreateAndLinkView(ctx, req)
 }
-
-func (u UnitController) UnitGetAppInfo(ctx context.Context, req *u.UnitGetAppInfoReq) (res *u.UnitGetAppInfoResp, err error) {
-	//TODO implement me
-	panic("implement me")
+func (u *UnitController) UnitSignIn(ctx context.Context, req *u.UnitSignInReq) (res *u.UnitSignInResp, err error) {
+	logx.Info("UnitSignIn", req)
+	return u.UnitService.UnitSignIn(ctx, req)
 }
-
-func (u UnitController) UnitModelGetInfo(ctx context.Context, req *u.UnitModelGetInfoReq) (res *u.UnitModelGetInfoResp, err error) {
-	//TODO implement me
-	panic("implement me")
+func (u *UnitController) UnitCreateVerify(ctx context.Context, req *u.UnitCreateVerifyReq) (res *u.UnitCreateVerifyResp, err error) {
+	logx.Info("UnitCreateVerify", req)
+	return u.UnitService.UnitCreateVerify(ctx, req)
 }
-
-func (u UnitController) UnitModelUpdateInfo(ctx context.Context, req *u.UnitModelUpdateInfoReq) (res *basic.Response, err error) {
-	//TODO implement me
-	panic("implement me")
+func (u *UnitController) UnitUpdateVerifyPassword(ctx context.Context, req *u.UnitUpdateVerifyReq) (res *basic.Response, err error) {
+	logx.Info("UnitUpdateVerifyPassword", req)
+	return u.UnitService.UnitUpdateVerifyPassword(ctx, req)
+}
+func (u *UnitController) UnitLinkUser(ctx context.Context, req *u.UnitLinkUserReq) (res *basic.Response, err error) {
+	logx.Info("UnitLinkUser", req)
+	return u.UnitService.UnitLinkUser(ctx, req)
+}
+func (u *UnitController) UnitLinkView(ctx context.Context, req *u.UnitLinkViewReq) (res *basic.Response, err error) {
+	logx.Info("UnitLinkView", req)
+	return u.UnitService.UnitLinkView(ctx, req)
+}
+func (u *UnitController) UnitPageQueryUser(ctx context.Context, req *u.UnitPageQueryUserReq) (res *u.UnitPageQueryUserResp, err error) {
+	logx.Info("UnitPageQueryUser", req)
+	return u.UnitService.UnitPageQueryUser(ctx, req)
+}
+func (u *UnitController) UnitPageQueryView(ctx context.Context, req *u.UnitPageQueryViewReq) (res *u.UnitPageQueryViewResp, err error) {
+	logx.Info("UnitPageQueryView", req)
+	return u.UnitService.UnitPageQueryView(ctx, req)
+}
+func (u *UnitController) UnitGetAppInfo(ctx context.Context, req *u.UnitGetAppInfoReq) (res *u.UnitGetAppInfoResp, err error) {
+	logx.Info("UnitGetAppInfo", req)
+	return u.UnitService.UnitGetAppInfo(ctx, req)
+}
+func (u *UnitController) UnitModelGetInfo(ctx context.Context, req *u.UnitModelGetInfoReq) (res *u.UnitModelGetInfoResp, err error) {
+	logx.Info("UnitModelGetInfo", req)
+	return u.UnitService.UnitModelGetInfo(ctx, req)
+}
+func (u *UnitController) UnitModelUpdateInfo(ctx context.Context, req *u.UnitModelUpdateInfoReq) (res *basic.Response, err error) {
+	logx.Info("UnitModelUpdateInfo", req)
+	return u.UnitService.UnitModelUpdateInfo(ctx, req)
 }

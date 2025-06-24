@@ -8,10 +8,17 @@ const (
 	UnitId     = "unit_id"
 	ViewId     = "view_id"
 	Status     = "status"
-	CreateTime = "create_time"
 	Phone      = "phone"
 	Timestamp  = "timestamp"
 	LogId      = "log_id"
+	Name       = "name"
+	Address    = "address"
+	Contact    = "contact"
+	Level      = "level"
+	CreateTime = "create_time"
+	UpdateTime = "update_time"
+	DeleteTime = "delete_time"
+	Password   = "password"
 	NotEqual   = "$ne"
 )
 
@@ -32,6 +39,8 @@ const (
 // password
 const (
 	DefaultPassword = "123456"
+	UpdateByOldPwd  = 0
+	UpdateByCode    = 1
 )
 
 // status
@@ -45,4 +54,10 @@ const (
 	Unknown = 0
 	Male    = 1
 	Female  = 2
+)
+
+// verifyType
+const (
+	Strong = 0
+	Weak   = 1
 )

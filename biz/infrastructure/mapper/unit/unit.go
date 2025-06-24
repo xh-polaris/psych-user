@@ -7,7 +7,7 @@ import (
 )
 
 type UnitVerify struct {
-	UserId     string       `bson:"userId,omitempty" json:"userId,omitempty"`
+	UnitId     string       `bson:"unit_id,omitempty" json:"userId,omitempty"`
 	VerifyType int32        `bson:"verify_type,omitempty"  json:"verifyType,omitempty"`
 	Account    *string      `bson:"account,omitempty"  json:"account,omitempty"`
 	Password   *string      `bson:"password,omitempty"  json:"password,omitempty"`
@@ -23,7 +23,7 @@ type Unit struct {
 	Contact    string             `bson:"contact,omitempty" json:"contact,omitempty"`
 	Level      int32              `bson:"level" json:"level,omitempty"`
 	Status     int32              `bson:"status" json:"status,omitempty"`
-	Verify     UnitVerify         `bson:"verify,omitempty" json:"verify,omitempty"`
+	Verify     *UnitVerify        `bson:"verify,omitempty" json:"verify,omitempty"`
 	CreateTime time.Time          `bson:"create_time,omitempty" json:"createTime,omitempty"`
 	UpdateTime time.Time          `bson:"update_time,omitempty" json:"updateTime,omitempty"`
 	DeleteTime time.Time          `bson:"delete_time,omitempty" json:"deleteTime,omitempty"`

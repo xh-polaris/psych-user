@@ -62,27 +62,6 @@ func (m *MongoMapper) InsertWithEcho(ctx context.Context, user *User) (string, e
 	return id, err
 }
 
-func (m *MongoMapper) InsertMany(ctx context.Context, users []*User) error {
-	if len(users) == 0 {
-		return nil
-	}
-
-	now := time.Now()
-	for _, user := range users {
-		user.ID = primitive.NewObjectID()
-		user.CreateTime = now
-		user.UpdateTime = now
-
-		// 逐个插入文档
-		_, err := m.conn.InsertOneNoCache(ctx, user)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func (m *MongoMapper) Update(ctx context.Context, user *User) error {
 	user.UpdateTime = time.Now()
 	_, err := m.conn.UpdateByIDNoCache(ctx, user.ID, bson.M{"$set": user})

@@ -57,7 +57,8 @@ func VerifyGen2Loc(verify *u.UnitVerify) *unit.UnitVerify {
 
 	if verify.VerifyType == consts.Weak {
 		res.Account = &verify.Account
-		res.Password = &verify.Password
+		//res.Password =
+		// TODO res.Password = &verify.Password
 		res.Form = OptionGen2Loc(verify.Form)
 	}
 
@@ -72,7 +73,7 @@ func VerifyLoc2Gen(verify *unit.UnitVerify) *u.UnitVerify {
 
 	if verify.VerifyType == consts.Weak {
 		res.Account = *verify.Account
-		res.Password = *verify.Password
+		//TODO res.Password = *verify.Password
 		res.Form = OptionLoc2Gen(verify.Form)
 	}
 

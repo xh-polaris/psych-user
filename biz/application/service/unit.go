@@ -123,14 +123,15 @@ func (s *UnitService) UnitSignIn(ctx context.Context, req *u.UnitSignInReq) (res
 
 	return &u.UnitSignInResp{
 		Unit: &u.Unit{
-			Id:         unit.ID.Hex(),
-			Phone:      unit.Phone,
-			Name:       unit.Name,
-			Address:    unit.Address,
-			Contact:    unit.Contact,
-			Level:      unit.Level,
-			Status:     unit.Status,
-			Verify:     convert.VerifyLoc2Gen(unit.Verify),
+			Id:      unit.ID.Hex(),
+			Phone:   unit.Phone,
+			Name:    unit.Name,
+			Address: unit.Address,
+			Contact: unit.Contact,
+			Level:   unit.Level,
+			Status:  unit.Status,
+			// TODO
+			//		Verify:     convert.VerifyLoc2Gen(unit.Verify),
 			CreateTime: unit.CreateTime.Unix(),
 			UpdateTime: unit.UpdateTime.Unix(),
 		},
@@ -175,14 +176,14 @@ func (s *UnitService) UnitGetInfo(ctx context.Context, req *u.UnitGetInfoReq) (r
 	// 构建响应
 	res = &u.UnitGetInfoResp{
 		Unit: &u.Unit{
-			Id:         req.Id,
-			Phone:      unit.Phone,
-			Name:       unit.Name,
-			Address:    unit.Address,
-			Contact:    unit.Contact,
-			Level:      unit.Level,
-			Status:     unit.Status,
-			Verify:     convert.VerifyLoc2Gen(unit.Verify),
+			Id:      req.Id,
+			Phone:   unit.Phone,
+			Name:    unit.Name,
+			Address: unit.Address,
+			Contact: unit.Contact,
+			Level:   unit.Level,
+			Status:  unit.Status,
+			// TODO		Verify:     convert.VerifyLoc2Gen(unit.Verify),
 			CreateTime: unit.CreateTime.Unix(),
 			UpdateTime: unit.UpdateTime.Unix(),
 		},
@@ -317,9 +318,9 @@ func (s *UnitService) createUserByPhone(ctx context.Context, unitId string, user
 // 关联学号
 func (s *UnitService) createUserByStudentId(ctx context.Context, unitId string, user *u.UnitCreateAndLinkUserReq_U) {
 	studentId := user.AuthId
-	defaultPwd, err := encrypt.BcryptEncrypt(consts.DefaultPassword)
-	if err != nil {
-		return
+	password := user.Password
+	if password == "" {
+		password = encrypt.GetDefaultPwd()
 	}
 	option := convert.OptionGen2Loc(user.GetOptions())
 
@@ -329,7 +330,7 @@ func (s *UnitService) createUserByStudentId(ctx context.Context, unitId string, 
 	if errors.Is(err, consts.ErrNotFound) {
 		// 如果不存在，则先进行user创建
 		userId, err := s.UserMapper.InsertWithEcho(ctx, &usrMapper.User{
-			Password: defaultPwd,
+			Password: password,
 			Name:     user.Name,
 			Gender:   user.Gender,
 		})

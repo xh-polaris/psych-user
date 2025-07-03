@@ -58,8 +58,11 @@ func (s *UnitService) UnitSignUp(ctx context.Context, req *u.UnitSignUpReq) (res
 	}
 
 	// 检查手机号是否已注册
-	if _, err = s.UnitMapper.FindOneByPhone(ctx, req.Unit.Phone); err != nil {
-		return nil, consts.ErrUnitPhoneExist
+	if _, err = s.UnitMapper.FindOneByPhone(ctx, req.Unit.Phone); !errors.Is(err, consts.ErrNotFound) {
+		return nil, err
+	}
+	if _, err = s.UserMapper.FindOneByPhone(ctx, req.Unit.Phone); !errors.Is(err, consts.ErrNotFound) {
+		return nil, err
 	}
 
 	// 密码加密

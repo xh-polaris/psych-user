@@ -24,16 +24,16 @@ const (
 
 // createType
 const (
-	CreateByPhone     = 1
-	CreateByStudentId = 2
-	CreateByEmail     = 3
+	CreateByPhone     = 0
+	CreateByStudentId = 1
+	CreateByEmail     = 2
 )
 
 // authType
 const (
-	AuthPhoneAndPwd     = 1
-	AuthStudentIdAndPwd = 2
-	AuthPhoneAndCode    = 3
+	AuthPhoneAndPwd     = 0
+	AuthStudentIdAndPwd = 1
+	AuthPhoneAndCode    = 2
 )
 
 // password

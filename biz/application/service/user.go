@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"github.com/google/wire"
 	"github.com/xh-polaris/psych-idl/kitex_gen/basic"
 	u "github.com/xh-polaris/psych-idl/kitex_gen/user"
@@ -36,6 +37,20 @@ var UserServiceSet = wire.NewSet(
 
 func (s *UserService) UserSignUp(ctx context.Context, req *u.UserSignUpReq) (res *u.UserSignUpResp, err error) {
 	// 默认用户通过注册接口，使用手机号注册
+	// 参数校验
+	if req.User == nil || !reg.CheckMobile(req.User.Phone) || req.User.Name == "" || req.User.Password == "" {
+		logx.Error("UserSignUp fail")
+		return nil, consts.ErrUnitSignUp
+	}
+
+	// 检查手机号是否已注册
+	if _, err = s.UserMapper.FindOneByPhone(ctx, req.User.Phone); !errors.Is(err, consts.ErrNotFound) {
+		return nil, err
+	}
+	if _, err = s.UnitMapper.FindOneByPhone(ctx, req.User.Phone); !errors.Is(err, consts.ErrNotFound) {
+		return nil, err
+	}
+
 	pwd, err := encrypt.BcryptEncrypt(req.User.Password)
 	if err != nil {
 		return nil, err

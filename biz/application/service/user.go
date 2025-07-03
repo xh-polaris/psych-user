@@ -10,7 +10,6 @@ import (
 	untmapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/unit"
 	uumapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/unit_user"
 	usrmapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/user"
-	"github.com/xh-polaris/psych-user/biz/infrastructure/util/convert"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/encrypt"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/reg"
 )
@@ -182,7 +181,7 @@ func (s *UserService) UserGetInfo(ctx context.Context, req *u.UserGetInfoReq) (r
 		}
 		res.UnitId = &unitId
 		res.StudentId = &uu.StudentId
-		res.Options = convert.OptionLoc2Gen(uu.Options)
+		res.Form = uu.Options
 	}
 
 	return res, nil

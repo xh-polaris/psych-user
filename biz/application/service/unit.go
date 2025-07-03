@@ -11,7 +11,6 @@ import (
 	untmapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/unit"
 	uuMapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/unit_user"
 	usrMapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/user"
-	"github.com/xh-polaris/psych-user/biz/infrastructure/util/convert"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/encrypt"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/reg"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/result"
@@ -123,15 +122,16 @@ func (s *UnitService) UnitSignIn(ctx context.Context, req *u.UnitSignInReq) (res
 
 	return &u.UnitSignInResp{
 		Unit: &u.Unit{
-			Id:      unit.ID.Hex(),
-			Phone:   unit.Phone,
-			Name:    unit.Name,
-			Address: unit.Address,
-			Contact: unit.Contact,
-			Level:   unit.Level,
-			Status:  unit.Status,
-			// TODO
-			//		Verify:     convert.VerifyLoc2Gen(unit.Verify),
+			Id:         unit.ID.Hex(),
+			Phone:      unit.Phone,
+			Name:       unit.Name,
+			Address:    unit.Address,
+			Contact:    unit.Contact,
+			Level:      unit.Level,
+			Status:     unit.Status,
+			VerifyType: unit.VerifyType,
+			Account:    *unit.Account,
+			Form:       unit.Form,
 			CreateTime: unit.CreateTime.Unix(),
 			UpdateTime: unit.UpdateTime.Unix(),
 		},
@@ -176,16 +176,19 @@ func (s *UnitService) UnitGetInfo(ctx context.Context, req *u.UnitGetInfoReq) (r
 	// 构建响应
 	res = &u.UnitGetInfoResp{
 		Unit: &u.Unit{
-			Id:      req.Id,
-			Phone:   unit.Phone,
-			Name:    unit.Name,
-			Address: unit.Address,
-			Contact: unit.Contact,
-			Level:   unit.Level,
-			Status:  unit.Status,
-			// TODO		Verify:     convert.VerifyLoc2Gen(unit.Verify),
+			Id:         req.Id,
+			Phone:      unit.Phone,
+			Name:       unit.Name,
+			Address:    unit.Address,
+			Contact:    unit.Contact,
+			Level:      unit.Level,
+			Status:     unit.Status,
+			VerifyType: unit.VerifyType,
+			Account:    *unit.Account,
+			Form:       unit.Form,
 			CreateTime: unit.CreateTime.Unix(),
 			UpdateTime: unit.UpdateTime.Unix(),
+			DeleteTime: 0,
 		},
 	}
 
@@ -246,12 +249,10 @@ func (s *UnitService) createUserByPhone(ctx context.Context, unitId string, user
 	// 关联手机号
 	// TODO: 开启事务?
 	phone := user.AuthId
-	defaultPwd, err := encrypt.BcryptEncrypt(consts.DefaultPassword)
+	defaultPwd, err := encrypt.BcryptEncrypt(encrypt.GetDefaultPwd())
 	if err != nil {
 		return
 	}
-	// 获取 option，判断是否为空
-	option := convert.OptionGen2Loc(user.GetOptions())
 
 	// 先查找该手机号是否已经注册
 	logx.Info("正在查询用户: phone = %s, unitId = %s\n", phone, unitId)
@@ -275,7 +276,7 @@ func (s *UnitService) createUserByPhone(ctx context.Context, unitId string, user
 		if s.UUMapper.Insert(ctx, &uuMapper.UnitUser{
 			UnitId:  unitId,
 			UserId:  userId,
-			Options: option,
+			Options: user.GetForm(),
 		}) != nil {
 			logx.Error("创建用户关联失败。userId = %s, unitId = %s, phone = %s\n", userId, unitId, phone)
 			return
@@ -302,7 +303,7 @@ func (s *UnitService) createUserByPhone(ctx context.Context, unitId string, user
 		err = s.UUMapper.Insert(ctx, &uuMapper.UnitUser{
 			UnitId:  unitId,
 			UserId:  userId,
-			Options: option,
+			Options: user.GetForm(),
 		})
 
 		if err != nil {
@@ -327,7 +328,6 @@ func (s *UnitService) createUserByStudentId(ctx context.Context, unitId string, 
 		}
 		password = pwd
 	}
-	option := convert.OptionGen2Loc(user.GetOptions())
 
 	// 先根据学号(authId -> studentId)和unitId查找是否已经存在
 	// 此时如果记录存在，则表示已经有user账号且关联完成
@@ -350,7 +350,7 @@ func (s *UnitService) createUserByStudentId(ctx context.Context, unitId string, 
 			UnitId:    unitId,
 			UserId:    userId,
 			StudentId: studentId,
-			Options:   option,
+			Options:   user.GetForm(),
 		}) != nil {
 			logx.Error("创建用户关联失败。userId = %s, unitId = %s, studentId = %s\n", userId, unitId, studentId)
 			return
@@ -395,26 +395,14 @@ func (s *UnitService) UnitUpdatePassword(ctx context.Context, req *u.UnitUpdateP
 	switch authType {
 	case consts.UpdateByOldPwd:
 		// 旧密码
-		unit, err := s.UnitMapper.FindOne(ctx, unitId)
-		if err != nil {
-			return nil, err
-		}
-
-		// 校验密码
-		oldPwd := req.AuthId
-		if !encrypt.BcryptCheck(oldPwd, unit.Password) {
-			return nil, consts.ErrUnitPasswordMismatch
-		}
-		flag = true
+		flag, err = s.updatePasswordCheckOldPwd(ctx, unitId, req)
 	case consts.UpdateByCode:
 		// TODO: 验证码
-		unit, err := s.UnitMapper.FindOne(ctx, unitId)
-		if err != nil {
-			return nil, err
-		}
-		phone := unit.Phone
-		logx.Info(phone)
-		// flag == true
+		flag, err = s.updatePasswordCheckCode(ctx, unitId, req)
+	}
+
+	if err != nil {
+		return nil, consts.ErrInvalidObjectId
 	}
 
 	if flag {
@@ -425,6 +413,25 @@ func (s *UnitService) UnitUpdatePassword(ctx context.Context, req *u.UnitUpdateP
 		return result.ResponseOk(), nil
 	}
 	return nil, err
+}
+
+func (s *UnitService) updatePasswordCheckOldPwd(ctx context.Context, unitId string, req *u.UnitUpdatePasswordReq) (bool, error) {
+	// 查找密码
+	unit, err := s.UnitMapper.FindOne(ctx, unitId)
+	if err != nil {
+		return false, err
+	}
+	// 校验密码
+	oldPwd := req.AuthId
+	if !encrypt.BcryptCheck(oldPwd, unit.Password) {
+		return false, consts.ErrUnitPasswordMismatch
+	}
+	return true, nil
+}
+
+func (s *UnitService) updatePasswordCheckCode(ctx context.Context, id string, req *u.UnitUpdatePasswordReq) (bool, error) {
+	// todo 根据验证码修改登录密码
+	return false, nil
 }
 
 func (s *UnitService) UnitCreateVerify(ctx context.Context, req *u.UnitCreateVerifyReq) (res *u.UnitCreateVerifyResp, err error) {

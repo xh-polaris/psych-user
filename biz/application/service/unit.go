@@ -12,10 +12,10 @@ import (
 	uuMapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/unit_user"
 	usrMapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/user"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/encrypt"
+	"github.com/xh-polaris/psych-user/biz/infrastructure/util/random"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/reg"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/result"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -133,7 +133,7 @@ func (s *UnitService) UnitSignIn(ctx context.Context, req *u.UnitSignInReq) (res
 			Level:      unit.Level,
 			Status:     unit.Status,
 			VerifyType: unit.VerifyType,
-			Account:    *unit.Account,
+			Account:    unit.Account,
 			Form:       unit.Form,
 			CreateTime: unit.CreateTime.Unix(),
 			UpdateTime: unit.UpdateTime.Unix(),
@@ -152,7 +152,6 @@ func (s *UnitService) signInWithPhoneAndPwd(ctx context.Context, req *u.UnitSign
 
 	// 校验密码
 	if encrypt.BcryptCheck(password, unit.Password) {
-		unit.Password = ""
 		return unit, nil
 	}
 	return nil, nil
@@ -187,11 +186,10 @@ func (s *UnitService) UnitGetInfo(ctx context.Context, req *u.UnitGetInfoReq) (r
 			Level:      unit.Level,
 			Status:     unit.Status,
 			VerifyType: unit.VerifyType,
-			Account:    *unit.Account,
+			Account:    unit.Account,
 			Form:       unit.Form,
 			CreateTime: unit.CreateTime.Unix(),
 			UpdateTime: unit.UpdateTime.Unix(),
-			DeleteTime: 0,
 		},
 	}
 
@@ -201,27 +199,33 @@ func (s *UnitService) UnitGetInfo(ctx context.Context, req *u.UnitGetInfoReq) (r
 // UnitLinkUser 关联用户账号
 func (s *UnitService) UnitLinkUser(ctx context.Context, req *u.UnitLinkUserReq) (res *basic.Response, err error) {
 	// 参数校验
-	if req.UnitId == "" || req.UserId == "" {
+	unitId := req.UnitId
+	userId := req.UserId
+	if unitId == "" || userId == "" {
 		return nil, consts.ErrInvalidParams
 	}
 
 	// 验证单位是否存在
-	if _, err = s.UnitMapper.FindOne(ctx, req.UnitId); err != nil {
+	if _, err = s.UnitMapper.FindOne(ctx, unitId); err != nil {
 		return nil, consts.ErrUnitNotExist
 	}
 
 	// 验证用户是否存在
-	if _, err = s.UserMapper.FindOne(ctx, req.UserId); err != nil {
+	if _, err = s.UserMapper.FindOne(ctx, userId); err != nil {
 		return nil, consts.ErrUserNotExist
 	}
 
 	// 检查关联是否已存在
-	if _, err := s.UnitMapper.CheckLinkExists(ctx, req.UnitId, req.UserId); err != nil {
+	if _, err := s.UUMapper.FindOneByUU(ctx, userId, unitId); err != nil && !errors.Is(err, consts.ErrNotFound) {
 		return nil, consts.ErrUnitLinkUser
 	}
 
 	// 如果关联不存在，则创建关联
-	if s.UnitMapper.LinkUser(ctx, req.UnitId, req.UserId) != nil {
+	if s.UUMapper.Insert(ctx, &uuMapper.UnitUser{
+		UserId:  userId,
+		UnitId:  unitId,
+		Options: nil,
+	}) != nil {
 		return nil, consts.ErrUnitLinkUser
 	}
 
@@ -252,13 +256,16 @@ func (s *UnitService) createUserByPhone(ctx context.Context, unitId string, user
 	// 关联手机号
 	// TODO: 开启事务?
 	phone := user.AuthId
-	defaultPwd, err := encrypt.BcryptEncrypt(encrypt.GetDefaultPwd())
-	if err != nil {
+	defaultPwd := encrypt.GetDefaultPwd()
+
+	// 先查找该手机号是否已经注册
+	logx.Info("正在查询手机号是否被注册: phone = %s, unitId = %s\n", phone, unitId)
+	_, err := s.UnitMapper.FindOneByPhone(ctx, phone)
+	if err != nil && !errors.Is(err, consts.ErrNotFound) {
+		logx.Error("该手机号已经被注册为unit账号: phone = %s\n", phone)
 		return
 	}
 
-	// 先查找该手机号是否已经注册
-	logx.Info("正在查询用户: phone = %s, unitId = %s\n", phone, unitId)
 	us, err := s.UserMapper.FindOneByPhone(ctx, phone)
 	if errors.Is(err, consts.ErrNotFound) {
 		// 未被注册，先在user表中添加数据
@@ -379,7 +386,6 @@ func (s *UnitService) UnitUpdateInfo(ctx context.Context, req *u.UnitUpdateInfoR
 		Name:       req.Unit.Name,
 		Address:    req.Unit.Address,
 		Contact:    req.Unit.Contact,
-		Status:     req.Unit.Status,
 		UpdateTime: time.Time{},
 	}
 	if err := s.UnitMapper.UpdateBasicInfo(ctx, unit); err != nil {
@@ -410,7 +416,11 @@ func (s *UnitService) UnitUpdatePassword(ctx context.Context, req *u.UnitUpdateP
 
 	if flag {
 		// 修改密码
-		if err := s.UnitMapper.UpdatePassword(ctx, req.Id, req.NewPassword); err != nil {
+		newPwd, err := encrypt.BcryptEncrypt(req.NewPassword)
+		if err != nil {
+			return nil, err
+		}
+		if err := s.UnitMapper.UpdatePassword(ctx, req.Id, newPwd); err != nil {
 			return nil, err
 		}
 		return result.ResponseOk(), nil
@@ -438,41 +448,75 @@ func (s *UnitService) updatePasswordCheckCode(ctx context.Context, id string, re
 }
 
 func (s *UnitService) UnitCreateVerify(ctx context.Context, req *u.UnitCreateVerifyReq) (res *u.UnitCreateVerifyResp, err error) {
-	// 创建和修改二合一接口
-	/*	unitId := req.UnitVerify.UserId
-		verifyType := req.UnitVerify.VerifyType
-		verify := &untmapper.UnitVerify{
-			UnitId:     unitId,
-			VerifyType: verifyType,
+	// 创建和修改接口
+	verify := req.Verify
+	// 设置为强校验，清空有关弱校验的信息
+	if verify.VerifyType == consts.Strong {
+		verify.Account = ""
+		verify.VerifyPassword = ""
+		verify.Form = nil
+		err = s.UnitMapper.UpdateVerify(ctx, verify)
+		if err != nil {
+			return nil, err
 		}
+		return &u.UnitCreateVerifyResp{
+			Unit: &u.Unit{
+				Id:         verify.UnitId,
+				VerifyType: verify.VerifyType,
+			},
+		}, err
+	}
 
-		// 如果是弱验证，判断是否给出了 account 和 password，否则account随机生成，password默认
-		if verifyType == consts.Weak {
+	// 设置为弱校验
+	// 判断是否给出了account或password，否则account随机生成，password默认
+	if verify.Account == "" {
+		verify.Account, err = s.generateUniqueAccount(ctx)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// 检查 account 是否重复
+		_, err = s.UnitMapper.FindOneByAccount(ctx, verify.Account)
+		if err != nil && !errors.Is(err, consts.ErrNotFound) {
+			return nil, err
+		}
+	}
 
-		}*/
+	if verify.VerifyPassword == "" {
+		verify.VerifyPassword = encrypt.GetDefaultPwd()
+	}
 
-	return nil, err
+	err = s.UnitMapper.UpdateVerify(ctx, verify)
+	if err != nil {
+		return nil, err
+	}
+
+	return &u.UnitCreateVerifyResp{
+		Unit: &u.Unit{
+			Id:             verify.UnitId,
+			VerifyType:     verify.VerifyType,
+			Account:        verify.Account,
+			VerifyPassword: verify.VerifyPassword,
+			Form:           verify.Form,
+		},
+	}, err
 }
 
 // 生成不重复账号
-func (s *UnitService) generateUniqueAccount(ctx context.Context, collection *mongo.Collection) (string, error) {
-	/*	for i := 0; i < 10; i++ { // 最多尝试10次
-			account, err := random.GenerateRandomAccount()
-			if err != nil {
-				return "", err
-			}
-
-			// 检查数据库中是否存在
-			count, err := s.UnitMapper.
-			if err != nil {
-				return "", err
-			}
-
-			if count == 0 {
-				return account, nil // 找到了唯一账号
-			}
+func (s *UnitService) generateUniqueAccount(ctx context.Context) (string, error) {
+	for i := 0; i < 10; i++ { // 最多尝试10次
+		account, err := random.GenerateRandomAccount()
+		if err != nil {
+			return "", err
 		}
-		logx.Info("生成唯一账号失败，请重试")*/
+
+		// 检查数据库中是否存在
+		_, err = s.UnitMapper.FindOneByAccount(ctx, account)
+		if errors.Is(err, consts.ErrNotFound) {
+			return account, err
+		}
+	}
+	logx.Info("生成唯一账号失败，请重试")
 	return "", consts.ErrUnitVerify
 }
 
@@ -480,11 +524,11 @@ func (s *UnitService) UnitUpdateVerifyPassword(ctx context.Context, req *u.UnitU
 	return nil, err
 }
 
-func (s *UnitService) UnitLinkView(ctx context.Context, req *u.UnitLinkViewReq) (res *basic.Response, err error) {
+func (s *UnitService) UnitPageQueryUser(ctx context.Context, req *u.UnitPageQueryUserReq) (res *u.UnitPageQueryUserResp, err error) {
 	return nil, err
 }
 
-func (s *UnitService) UnitPageQueryUser(ctx context.Context, req *u.UnitPageQueryUserReq) (res *u.UnitPageQueryUserResp, err error) {
+func (s *UnitService) UnitLinkView(ctx context.Context, req *u.UnitLinkViewReq) (res *basic.Response, err error) {
 	return nil, err
 }
 

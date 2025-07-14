@@ -2,24 +2,29 @@ package consts
 
 // 数据库相关
 const (
-	ID         = "_id"
-	StudentId  = "student_id"
-	UserID     = "user_id"
-	UnitId     = "unit_id"
-	ViewId     = "view_id"
-	Status     = "status"
-	Phone      = "phone"
-	Timestamp  = "timestamp"
-	LogId      = "log_id"
-	Name       = "name"
-	Address    = "address"
-	Contact    = "contact"
-	Level      = "level"
-	CreateTime = "create_time"
-	UpdateTime = "update_time"
-	DeleteTime = "delete_time"
-	Password   = "password"
-	NotEqual   = "$ne"
+	ID             = "_id"
+	StudentId      = "student_id"
+	UserID         = "user_id"
+	UnitId         = "unit_id"
+	ViewId         = "view_id"
+	Status         = "status"
+	Phone          = "phone"
+	Timestamp      = "timestamp"
+	LogId          = "log_id"
+	Name           = "name"
+	Address        = "address"
+	Contact        = "contact"
+	Level          = "level"
+	CreateTime     = "create_time"
+	UpdateTime     = "update_time"
+	DeleteTime     = "delete_time"
+	Password       = "password"
+	NotEqual       = "$ne"
+	Account        = "account"
+	VerifyPassword = "verify_password"
+	VerifyType     = "verify_type"
+	Form           = "form"
+	Options        = "options"
 )
 
 // createType
@@ -31,9 +36,10 @@ const (
 
 // authType
 const (
-	AuthPhoneAndPwd     = 0
-	AuthStudentIdAndPwd = 1
-	AuthPhoneAndCode    = 2
+	AuthPhoneAndPwd       = 0
+	AuthStudentIdAndPwd   = 1
+	AuthPhoneAndCode      = 2
+	AuthWeakAccountAndPwd = 3
 )
 
 // password
@@ -56,7 +62,7 @@ const (
 	Female  = 2
 )
 
-// verifyType
+// verify type
 const (
 	Strong = 0
 	Weak   = 1

@@ -152,8 +152,7 @@ func (s *UserService) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res
 			}, nil
 		}
 	}
-
-	return nil, nil
+	return nil, consts.ErrUserSignIn
 }
 
 func (s *UserService) UserGetInfo(ctx context.Context, req *u.UserGetInfoReq) (res *u.UserGetInfoResp, err error) {
@@ -232,7 +231,7 @@ func (s *UserService) UserUpdatePassword(ctx context.Context, req *u.UserUpdateP
 		}
 		return result.ResponseOk(), nil
 	}
-	return nil, err
+	return nil, nil
 }
 
 func (s *UserService) UserBelongUnit(ctx context.Context, req *u.UserBelongUnitReq) (res *u.UserBelongUnitResp, err error) {

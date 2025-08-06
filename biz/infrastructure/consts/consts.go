@@ -36,6 +36,7 @@ const (
 
 // authType
 const (
+	AlreadyAuth           = -1
 	AuthPhoneAndPwd       = 0
 	AuthStudentIdAndPwd   = 1
 	AuthPhoneAndCode      = 2

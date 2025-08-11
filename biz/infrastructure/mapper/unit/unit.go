@@ -6,11 +6,11 @@ import (
 )
 
 type UnitVerify struct {
-	UnitId     string            `bson:"unit_id,omitempty" json:"userId,omitempty"`
-	VerifyType int32             `bson:"verify_type,omitempty"  json:"verifyType,omitempty"`
-	Account    string            `bson:"account,omitempty"  json:"account,omitempty"`
-	Password   string            `bson:"password,omitempty"  json:"password,omitempty"`
-	Form       map[string]string `bson:"form,omitempty" json:"form,omitempty"`
+	UnitId     string         `bson:"unit_id,omitempty" json:"userId,omitempty"`
+	VerifyType int32          `bson:"verify_type,omitempty"  json:"verifyType,omitempty"`
+	Account    string         `bson:"account,omitempty"  json:"account,omitempty"`
+	Password   string         `bson:"password,omitempty"  json:"password,omitempty"`
+	Form       map[string]any `bson:"form,omitempty" json:"form,omitempty"`
 }
 
 type Unit struct {
@@ -25,7 +25,7 @@ type Unit struct {
 	VerifyType     int32              `bson:"verify_type,omitempty"  json:"verifyType,omitempty"`
 	Account        string             `bson:"account,omitempty"  json:"account,omitempty"`
 	VerifyPassword string             `bson:"verify_password,omitempty"  json:"verify_password,omitempty"`
-	Form           map[string]string  `bson:"form,omitempty" json:"form,omitempty"`
+	Form           map[string]any     `bson:"form,omitempty" json:"form,omitempty"`
 	CreateTime     time.Time          `bson:"create_time,omitempty" json:"createTime,omitempty"`
 	UpdateTime     time.Time          `bson:"update_time,omitempty" json:"updateTime,omitempty"`
 	DeleteTime     time.Time          `bson:"delete_time,omitempty" json:"deleteTime,omitempty"`

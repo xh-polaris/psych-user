@@ -11,6 +11,7 @@ import (
 	untmapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/unit"
 	uuMapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/unit_user"
 	usrMapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/user"
+	"github.com/xh-polaris/psych-user/biz/infrastructure/util/convert"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/encrypt"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/random"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/reg"
@@ -123,6 +124,10 @@ func (s *UnitService) UnitSignIn(ctx context.Context, req *u.UnitSignInReq) (res
 		return nil, err
 	}
 
+	form, err := convert.FormDB2Gen(unit.Form)
+	if err != nil {
+		return nil, err
+	}
 	return &u.UnitSignInResp{
 		Unit: &u.Unit{
 			Id:         unit.ID.Hex(),
@@ -134,7 +139,7 @@ func (s *UnitService) UnitSignIn(ctx context.Context, req *u.UnitSignInReq) (res
 			Status:     unit.Status,
 			VerifyType: unit.VerifyType,
 			Account:    unit.Account,
-			Form:       unit.Form,
+			Form:       form,
 			CreateTime: unit.CreateTime.Unix(),
 			UpdateTime: unit.UpdateTime.Unix(),
 		},
@@ -143,7 +148,7 @@ func (s *UnitService) UnitSignIn(ctx context.Context, req *u.UnitSignInReq) (res
 
 func (s *UnitService) signInWithPhoneAndPwd(ctx context.Context, req *u.UnitSignInReq) (*untmapper.Unit, error) {
 	// 手机号+密码登录
-	password := req.GetPassword()
+	password := req.VerifyCode
 	// 获取密码
 	unit, err := s.UnitMapper.FindOneByPhone(ctx, req.Phone)
 	if err != nil {
@@ -175,6 +180,10 @@ func (s *UnitService) UnitGetInfo(ctx context.Context, req *u.UnitGetInfoReq) (r
 		return nil, err
 	}
 
+	form, err := convert.FormDB2Gen(unit.Form)
+	if err != nil {
+		return nil, err
+	}
 	// 构建响应
 	res = &u.UnitGetInfoResp{
 		Unit: &u.Unit{
@@ -187,7 +196,7 @@ func (s *UnitService) UnitGetInfo(ctx context.Context, req *u.UnitGetInfoReq) (r
 			Status:     unit.Status,
 			VerifyType: unit.VerifyType,
 			Account:    unit.Account,
-			Form:       unit.Form,
+			Form:       form,
 			CreateTime: unit.CreateTime.Unix(),
 			UpdateTime: unit.UpdateTime.Unix(),
 		},
@@ -254,7 +263,6 @@ func (s *UnitService) UnitCreateAndLinkUser(ctx context.Context, req *u.UnitCrea
 
 func (s *UnitService) createUserByPhone(ctx context.Context, unitId string, user *u.UnitCreateAndLinkUserReq_U) {
 	// 关联手机号
-	// TODO: 开启事务?
 	phone := user.AuthId
 	defaultPwd := encrypt.GetDefaultPwd()
 
@@ -283,10 +291,14 @@ func (s *UnitService) createUserByPhone(ctx context.Context, unitId string, user
 		}
 
 		// 在unit_user表中关联
+		form, err := convert.FormGen2DB(user.GetForm())
+		if err != nil {
+			return
+		}
 		if s.UUMapper.Insert(ctx, &uuMapper.UnitUser{
 			UnitId:  unitId,
 			UserId:  userId,
-			Options: user.GetForm(),
+			Options: form,
 		}) != nil {
 			logx.Error("创建用户关联失败。userId = %s, unitId = %s, phone = %s\n", userId, unitId, phone)
 			return
@@ -310,10 +322,14 @@ func (s *UnitService) createUserByPhone(ctx context.Context, unitId string, user
 		}
 
 		// 无关联，则插入
+		form, err := convert.FormGen2DB(user.GetForm())
+		if err != nil {
+			return
+		}
 		err = s.UUMapper.Insert(ctx, &uuMapper.UnitUser{
 			UnitId:  unitId,
 			UserId:  userId,
-			Options: user.GetForm(),
+			Options: form,
 		})
 
 		if err != nil {
@@ -329,7 +345,7 @@ func (s *UnitService) createUserByPhone(ctx context.Context, unitId string, user
 // 关联学号
 func (s *UnitService) createUserByStudentId(ctx context.Context, unitId string, user *u.UnitCreateAndLinkUserReq_U) {
 	studentId := user.AuthId
-	password := user.Password
+	password := user.VerifyCode
 	if password == "" {
 		password = encrypt.GetDefaultPwd()
 	} else {
@@ -356,11 +372,15 @@ func (s *UnitService) createUserByStudentId(ctx context.Context, unitId string, 
 		}
 
 		// 创建后进行关联
+		form, err := convert.FormGen2DB(user.GetForm())
+		if err != nil {
+			return
+		}
 		if s.UUMapper.Insert(ctx, &uuMapper.UnitUser{
 			UnitId:    unitId,
 			UserId:    userId,
 			StudentId: studentId,
-			Options:   user.GetForm(),
+			Options:   form,
 		}) != nil {
 			logx.Error("创建用户关联失败。userId = %s, unitId = %s, studentId = %s\n", userId, unitId, studentId)
 			return

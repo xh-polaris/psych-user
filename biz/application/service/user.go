@@ -11,6 +11,7 @@ import (
 	untmapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/unit"
 	uumapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/unit_user"
 	usrmapper "github.com/xh-polaris/psych-user/biz/infrastructure/mapper/user"
+	"github.com/xh-polaris/psych-user/biz/infrastructure/util/convert"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/encrypt"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/reg"
 	"github.com/xh-polaris/psych-user/biz/infrastructure/util/result"
@@ -103,7 +104,7 @@ func (s *UserService) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res
 	case consts.AuthPhoneAndPwd:
 		{
 			// 手机号 + 密码
-			userId, err := s.signInWithPhoneAnwPwd(ctx, req.AuthId, *req.Password)
+			userId, err := s.signInWithPhoneAnwPwd(ctx, req.AuthId, req.VerifyCode)
 			if err != nil {
 				return nil, err
 			}
@@ -115,7 +116,7 @@ func (s *UserService) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res
 	case consts.AuthPhoneAndCode:
 		{
 			// 手机号 + 验证码
-			userId, err := s.signInWithPhoneAndCode(ctx, req.AuthId, *req.VerifyCode)
+			userId, err := s.signInWithPhoneAndCode(ctx, req.AuthId, req.VerifyCode)
 			if err != nil {
 				return nil, err
 			}
@@ -127,7 +128,7 @@ func (s *UserService) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res
 	case consts.AuthStudentIdAndPwd:
 		{
 			// 学号 + 密码
-			userId, err := s.signInWithStuIdAndPwd(ctx, req.UnitId, req.AuthId, *req.Password)
+			userId, err := s.signInWithStuIdAndPwd(ctx, req.UnitId, req.AuthId, req.VerifyCode)
 			if err != nil {
 				return nil, err
 			}
@@ -141,8 +142,7 @@ func (s *UserService) UserSignIn(ctx context.Context, req *u.UserSignInReq) (res
 	case consts.AuthWeakAccountAndPwd:
 		{
 			// 弱验证账号 + 密码
-			// TODO: userId?
-			unitId, err := s.signInWithWeakAccountAndPwd(ctx, req.AuthId, *req.Password)
+			unitId, err := s.signInWithWeakAccountAndPwd(ctx, req.AuthId, req.VerifyCode)
 			if err != nil {
 				return nil, err
 			}
@@ -181,9 +181,13 @@ func (s *UserService) UserGetInfo(ctx context.Context, req *u.UserGetInfoReq) (r
 		if err != nil {
 			return nil, err
 		}
+		form, err := convert.FormDB2Gen(uu.Options)
+		if err != nil {
+			return nil, err
+		}
 		res.UnitId = &unitId
 		res.StudentId = &uu.StudentId
-		res.Form = uu.Options
+		res.Form = form
 	}
 
 	return res, nil
@@ -197,7 +201,11 @@ func (s *UserService) UserUpdateInfo(ctx context.Context, req *u.UserUpdateInfoR
 
 	// 修改关联信息
 	if unitId := req.GetUnitId(); unitId != "" {
-		err = s.UUMapper.UpdateBasicInfo(ctx, req.User.Id, unitId, req.Form)
+		form, err := convert.FormGen2DB(req.Form)
+		if err != nil {
+			return nil, err
+		}
+		err = s.UUMapper.UpdateBasicInfo(ctx, req.User.Id, unitId, form)
 	}
 
 	return result.ResponseOk(), err

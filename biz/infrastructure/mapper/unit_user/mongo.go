@@ -92,7 +92,7 @@ func (m MongoMapper) FindOneByUnitAndStu(ctx context.Context, unitId string, stu
 	}
 }
 
-func (m MongoMapper) UpdateBasicInfo(ctx context.Context, userId string, unitId string, form map[string]string) error {
+func (m MongoMapper) UpdateBasicInfo(ctx context.Context, userId string, unitId string, form map[string]any) error {
 	_, err := m.conn.UpdateOneNoCache(ctx, bson.M{
 		consts.UserID: userId,
 		consts.UnitId: unitId,

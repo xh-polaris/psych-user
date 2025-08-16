@@ -71,8 +71,7 @@ func (s *UserService) UserSignUp(ctx context.Context, req *u.UserSignUpReq) (res
 	}
 
 	// 如果传入了 unitId，需要进行关联
-	unitId := req.GetUnitId()
-	if unitId != "" {
+	if unitId := req.GetUnitId(); unitId != "" {
 		uu := &uumapper.UnitUser{
 			UserId:    userId,
 			StudentId: req.GetStudentId(),

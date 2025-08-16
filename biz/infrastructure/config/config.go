@@ -11,18 +11,11 @@ import (
 
 var config *Config
 
-type Auth struct {
-	SecretKey    string
-	PublicKey    string
-	AccessExpire int64
-}
-
 type Config struct {
 	service.ServiceConf
 	ListenOn string
 	State    string
-	// Auth     Auth
-	Mongo struct {
+	Mongo    struct {
 		URL string
 		DB  string
 	}

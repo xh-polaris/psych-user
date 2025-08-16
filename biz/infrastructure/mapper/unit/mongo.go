@@ -3,6 +3,7 @@ package unit
 import (
 	"context"
 	"errors"
+	u "github.com/xh-polaris/psych-idl/kitex_gen/user"
 	"time"
 
 	"github.com/xh-polaris/psych-user/biz/infrastructure/config"
@@ -69,13 +70,13 @@ func (m *MongoMapper) InsertWithEcho(ctx context.Context, unit *Unit) (string, e
 
 // FindOneByPhone 根据手机号查找单位
 func (m *MongoMapper) FindOneByPhone(ctx context.Context, phone string) (*Unit, error) {
-	var u Unit
-	err := m.conn.FindOneNoCache(ctx, &u, bson.M{
+	var unit Unit
+	err := m.conn.FindOneNoCache(ctx, &unit, bson.M{
 		consts.Phone: phone,
 	})
 	switch {
 	case err == nil:
-		return &u, nil
+		return &unit, nil
 	case errors.Is(err, monc.ErrNotFound):
 		return nil, consts.ErrNotFound
 	default:
@@ -85,12 +86,12 @@ func (m *MongoMapper) FindOneByPhone(ctx context.Context, phone string) (*Unit, 
 
 // FindOne 根据ID查找单位
 func (m *MongoMapper) FindOne(ctx context.Context, id string) (*Unit, error) {
-	var u Unit
+	var unit Unit
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, consts.ErrInvalidObjectId
 	}
-	err = m.conn.FindOneNoCache(ctx, &u, bson.M{
+	err = m.conn.FindOneNoCache(ctx, &unit, bson.M{
 		consts.ID: oid,
 	})
 
@@ -101,54 +102,7 @@ func (m *MongoMapper) FindOne(ctx context.Context, id string) (*Unit, error) {
 		return nil, err
 	}
 
-	return &u, nil
-}
-
-// LinkUser 创建单位和用户的关联
-func (m *MongoMapper) LinkUser(ctx context.Context, unitId, userId string) error {
-	unitOid, err := primitive.ObjectIDFromHex(unitId)
-	if err != nil {
-		return consts.ErrInvalidObjectId
-	}
-	userOid, err := primitive.ObjectIDFromHex(userId)
-	if err != nil {
-		return consts.ErrInvalidObjectId
-	}
-
-	link := bson.M{
-		consts.UnitId: unitOid,
-		consts.UserID: userOid,
-	}
-
-	_, err = m.linkConn.InsertOneNoCache(ctx, link)
-	return err
-}
-
-// CheckLinkExists 检查单位和用户的关联是否已存在
-func (m *MongoMapper) CheckLinkExists(ctx context.Context, unitId, userId string) (bool, error) {
-	unitOid, err := primitive.ObjectIDFromHex(unitId)
-	if err != nil {
-		return false, consts.ErrInvalidObjectId
-	}
-	userOid, err := primitive.ObjectIDFromHex(userId)
-	if err != nil {
-		return false, consts.ErrInvalidObjectId
-	}
-
-	var result bson.M
-	err = m.linkConn.FindOneNoCache(ctx, &result, bson.M{
-		consts.UnitId: unitOid,
-		consts.UserID: userOid,
-	})
-
-	if err != nil {
-		if errors.Is(err, monc.ErrNotFound) {
-			return false, nil
-		}
-		return false, err
-	}
-
-	return true, nil
+	return &unit, nil
 }
 
 func (m *MongoMapper) UpdateBasicInfo(ctx context.Context, unit *Unit) error {
@@ -157,7 +111,6 @@ func (m *MongoMapper) UpdateBasicInfo(ctx context.Context, unit *Unit) error {
 		consts.Name:       unit.Name,
 		consts.Contact:    unit.Contact,
 		consts.Address:    unit.Address,
-		consts.Status:     unit.Status,
 		consts.UpdateTime: unit.UpdateTime,
 	}})
 	return err
@@ -168,6 +121,42 @@ func (m *MongoMapper) UpdatePassword(ctx context.Context, unitId, newPassword st
 	_, err = m.conn.UpdateByIDNoCache(ctx, unitOid, bson.M{"$set": bson.M{
 		consts.Password:   newPassword,
 		consts.UpdateTime: time.Now(),
+	}})
+	return err
+}
+
+func (m *MongoMapper) FindOneByAccount(ctx context.Context, account string) (*Unit, error) {
+	var unit Unit
+	err := m.conn.FindOneNoCache(ctx, &unit, bson.M{
+		consts.Account: account,
+	})
+	switch {
+	case err == nil:
+		return &unit, nil
+	case errors.Is(err, monc.ErrNotFound):
+		return nil, consts.ErrNotFound
+	default:
+		return nil, err
+	}
+}
+
+func (m *MongoMapper) UpdateVerify(ctx context.Context, verify *u.UnitVerify) error {
+	unitOid, err := primitive.ObjectIDFromHex(verify.UnitId)
+	_, err = m.conn.UpdateByIDNoCache(ctx, unitOid, bson.M{"$set": bson.M{
+		consts.Account:        verify.Account,
+		consts.VerifyPassword: verify.VerifyPassword,
+		consts.VerifyType:     verify.VerifyType,
+		consts.Form:           verify.Form,
+		consts.UpdateTime:     time.Now(),
+	}})
+	return err
+}
+
+func (m *MongoMapper) UpdateVerifyPassword(ctx context.Context, verify *u.UnitVerify) error {
+	unitOid, err := primitive.ObjectIDFromHex(verify.UnitId)
+	_, err = m.conn.UpdateByIDNoCache(ctx, unitOid, bson.M{"$set": bson.M{
+		consts.VerifyPassword: verify.VerifyPassword,
+		consts.UpdateTime:     time.Now(),
 	}})
 	return err
 }

@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	u "github.com/xh-polaris/psych-idl/kitex_gen/user"
 	"time"
 
 	"github.com/xh-polaris/psych-user/biz/infrastructure/config"
@@ -69,12 +70,12 @@ func (m *MongoMapper) Update(ctx context.Context, user *User) error {
 }
 
 func (m *MongoMapper) FindOne(ctx context.Context, id string) (*User, error) {
-	var u User
+	var user User
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, consts.ErrInvalidObjectId
 	}
-	err = m.conn.FindOneNoCache(ctx, &u, bson.M{
+	err = m.conn.FindOneNoCache(ctx, &user, bson.M{
 		consts.ID: oid,
 	})
 	if err != nil {
@@ -83,17 +84,17 @@ func (m *MongoMapper) FindOne(ctx context.Context, id string) (*User, error) {
 		}
 		return nil, err
 	}
-	return &u, nil
+	return &user, nil
 }
 
 func (m *MongoMapper) FindOneByPhone(ctx context.Context, phone string) (*User, error) {
-	var u User
-	err := m.conn.FindOneNoCache(ctx, &u, bson.M{
+	var user User
+	err := m.conn.FindOneNoCache(ctx, &user, bson.M{
 		consts.Phone: phone,
 	})
 	switch {
 	case err == nil:
-		return &u, nil
+		return &user, nil
 	case errors.Is(err, monc.ErrNotFound):
 		return nil, consts.ErrNotFound
 	default:
@@ -111,6 +112,31 @@ func (m *MongoMapper) UpdateCount(ctx context.Context, id string, increment int6
 			"count": increment,
 		},
 	})
+	return err
+}
+
+func (m *MongoMapper) UpdateBasicInfo(ctx context.Context, user *u.User) error {
+	oid, err := primitive.ObjectIDFromHex(user.Id)
+	if err != nil {
+		return consts.ErrInvalidObjectId
+	}
+	_, err = m.conn.UpdateByIDNoCache(ctx, oid, bson.M{"$set": &User{
+		Name:       user.Name,
+		Birth:      user.Birth,
+		Gender:     user.Gender,
+		UpdateTime: time.Now(),
+	}})
+	return err
+}
+
+func (m *MongoMapper) UpdatePassword(ctx context.Context, userId string, newPwd string) error {
+	oid, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		return consts.ErrInvalidObjectId
+	}
+	_, err = m.conn.UpdateByIDNoCache(ctx, oid, bson.M{"$set": &User{
+		Password: newPwd,
+	}})
 	return err
 }
 

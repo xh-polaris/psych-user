@@ -111,6 +111,7 @@ func (m *MongoMapper) UpdateBasicInfo(ctx context.Context, unit *Unit) error {
 		consts.Name:       unit.Name,
 		consts.Contact:    unit.Contact,
 		consts.Address:    unit.Address,
+		consts.Form:       unit.Form,
 		consts.UpdateTime: unit.UpdateTime,
 	}})
 	return err

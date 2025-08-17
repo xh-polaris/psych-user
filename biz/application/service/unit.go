@@ -351,6 +351,7 @@ func (s *UnitService) createUserByStudentId(ctx context.Context, unitId string, 
 	} else {
 		pwd, err := encrypt.BcryptEncrypt(password)
 		if err != nil {
+			return
 		}
 		password = pwd
 	}
@@ -401,12 +402,17 @@ func (s *UnitService) UnitUpdateInfo(ctx context.Context, req *u.UnitUpdateInfoR
 	if err != nil {
 		return nil, consts.ErrInvalidObjectId
 	}
+	form, err := convert.FormGen2DB(req.Unit.Form)
+	if err != nil {
+		return
+	}
 	unit := &untmapper.Unit{
 		ID:         unitId,
 		Name:       req.Unit.Name,
 		Address:    req.Unit.Address,
 		Contact:    req.Unit.Contact,
 		UpdateTime: time.Time{},
+		Form:       form,
 	}
 	if err := s.UnitMapper.UpdateBasicInfo(ctx, unit); err != nil {
 		return nil, err

@@ -1,8 +1,6 @@
 module github.com/xh-polaris/psych-user
 
-go 1.23.0
-
-toolchain go1.23.9
+go 1.24.0
 
 require (
 	github.com/cloudwego/kitex v0.12.3
@@ -13,8 +11,9 @@ require (
 	github.com/xh-polaris/psych-pkg v0.0.0-20250521140101-2e8463201b49
 	github.com/zeromicro/go-zero v1.8.3
 	go.mongodb.org/mongo-driver v1.17.3
-	golang.org/x/crypto v0.33.0
+	golang.org/x/crypto v0.45.0
 	google.golang.org/grpc v1.68.0
+	google.golang.org/protobuf v1.36.5
 )
 
 require (
@@ -94,13 +93,12 @@ require (
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
 	golang.org/x/arch v0.6.0 // indirect
-	golang.org/x/net v0.35.0 // indirect
-	golang.org/x/sync v0.11.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/sync v0.18.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/text v0.31.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241104194629-dd2ea8efbc28 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241104194629-dd2ea8efbc28 // indirect
-	google.golang.org/protobuf v1.36.5 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
